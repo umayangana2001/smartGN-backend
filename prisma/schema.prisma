@@ -1,0 +1,33 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model UserProfile {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  fullName  String
+  address   String
+  nic       String
+  email     String
+  telephone String
+  district  String
+  division  String
+  birthday  DateTime
+  updatedAt DateTime @updatedAt
+
+  documents UserDocument[]
+}
+
+model UserDocument {
+  id           String   @id @default(uuid())
+  userId       String
+  userProfile  UserProfile @relation(fields: [userId], references: [userId])
+  documentName String
+  filePath     String
+  createdAt    DateTime @default(now())
+}

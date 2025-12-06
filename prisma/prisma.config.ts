@@ -1,7 +1,7 @@
 // Prisma v7 configuration file.
 // Exports config for the Prisma CLI and a function to get client options.
 
-const DEFAULT_DB_URL = process.env.DATABASE_URL ?? 'mysql://root:password@localhost:3306/gn_system';
+const DEFAULT_DB_URL = process.env.DATABASE_URL ?? 'mysql://root@localhost:3306/gnsystem';
 
 export default {
   datasources: {

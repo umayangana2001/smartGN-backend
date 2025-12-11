@@ -31,6 +31,71 @@
 $ npm install
 ```
 
+## Database Setup
+
+### Environment Variables
+
+Create a `.env` file in the root directory with your database credentials:
+
+```bash
+DATABASE_URL="mysql://root:password@localhost:3306/test"
+JWT_SECRET="smartgn-secret-key"
+```
+
+Alternatively, you can use the provided `config/local.env` file as a reference.
+
+### Running Migrations
+
+After setting up your environment variables, you need to:
+
+1. **Generate Prisma Client** (generates TypeScript types from your schema):
+```bash
+$ npx prisma generate
+```
+
+2. **Create and apply migrations** (recommended for production):
+```bash
+# Create a new migration
+$ npx prisma migrate dev --name migration_name
+
+# Apply pending migrations
+$ npx prisma migrate deploy
+```
+
+3. **Push schema to database** (for development only - not recommended for production):
+```bash
+$ npx prisma db push
+```
+
+### Database Management Commands
+
+- **View database in Prisma Studio** (GUI):
+```bash
+$ npx prisma studio
+```
+
+- **Reset database** (drops all data and reapplies migrations):
+```bash
+$ npx prisma migrate reset
+```
+
+- **Check migration status**:
+```bash
+$ npx prisma migrate status
+```
+
+- **Format Prisma schema**:
+```bash
+$ npx prisma format
+```
+
+### Important Notes
+
+- Always run `npx prisma generate` after modifying `prisma/schema.prisma` to update the Prisma Client types
+- Use `prisma migrate dev` for development to create migration files
+- Use `prisma migrate deploy` in production to apply migrations without creating new ones
+- Never use `prisma db push` in production as it doesn't create migration history
+
 ## Compile and run the project
 
 ```bash

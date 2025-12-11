@@ -1,0 +1,72 @@
+// ==========================================
+// TEST DATABASE SCHEMA
+// ==========================================
+// 
+// ⚠️  FOR TESTING PURPOSES ONLY - DO NOT USE IN PRODUCTION!
+// 
+// This schema uses SQLite for local testing.
+// It mirrors the main schema but with SQLite-compatible types.
+// 
+// Created: 2025-12-10
+// Purpose: Testing authentication endpoints
+// ==========================================
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/test-client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Role stored as String in SQLite (enum not supported)
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  role      String   @default("USER")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile   UserProfile?
+}
+
+model VillageOfficer {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  fullName  String
+  district  String
+  division  String
+  role      String   @default("VILLAGE_OFFICER")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UserProfile {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  fullName  String
+  address   String
+  nic       String
+  email     String
+  telephone String
+  district  String
+  division  String
+  birthday  DateTime
+  updatedAt DateTime @updatedAt
+
+  user      User?    @relation(fields: [userId], references: [id])
+  documents UserDocument[]
+}
+
+model UserDocument {
+  id           String   @id @default(uuid())
+  userId       String
+  userProfile  UserProfile @relation(fields: [userId], references: [userId])
+  documentName String
+  filePath     String
+  createdAt    DateTime @default(now())
+}

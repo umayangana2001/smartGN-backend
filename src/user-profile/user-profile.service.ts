@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { MyInfoDto } from './dto/my-info.dto';
 
@@ -14,6 +14,12 @@ export class UserProfileService {
   }
 
   async createOrUpdateProfile(userId: string, data: MyInfoDto) {
+    // Ensure the user exists to avoid foreign key violations
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new BadRequestException('User does not exist');
+    }
+
     const existing = await this.prisma.userProfile.findUnique({ where: { userId } });
 
     const profileData = {

@@ -16,14 +16,19 @@ export class UserProfileService {
   async createOrUpdateProfile(userId: string, data: MyInfoDto) {
     const existing = await this.prisma.userProfile.findUnique({ where: { userId } });
 
+    const profileData = {
+      ...data,
+      birthday: new Date(data.birthday),
+    };
+
     if (existing) {
       return this.prisma.userProfile.update({
         where: { userId },
-        data,
+        data: profileData,
       });
     } else {
       return this.prisma.userProfile.create({
-        data: { ...data, userId },
+        data: { ...profileData, userId },
       });
     }
   }

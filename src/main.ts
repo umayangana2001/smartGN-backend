@@ -34,6 +34,7 @@ async function bootstrap() {
     .addTag('auth', 'Authentication endpoints')
     .addTag('user-profile', 'User profile management endpoints')
     .addTag('file-upload', 'File upload endpoints')
+    .addTag('service-request', 'Service request management endpoints')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

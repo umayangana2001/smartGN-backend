@@ -8,7 +8,9 @@ import {
   CreateServiceTypeDto,
   CreateServiceRequestDto,
   UpdateRequestStatusDto,
+  GnRequestActionDto,
 } from './dto';
+import { RequestStatus } from '@prisma/client';
 
 /**
  * Service Request Service
@@ -304,7 +306,7 @@ export class ServiceRequestService {
 }
 async gnApproveRejectRequest(
   requestId: string,
-  dto: { action: 'APPROVE' | 'REJECT'; remarks?: string },
+  dto: GnRequestActionDto,
 ) {
   const request = await this.prisma.serviceRequest.findUnique({
     where: { id: requestId },
@@ -317,9 +319,7 @@ async gnApproveRejectRequest(
   return this.prisma.serviceRequest.update({
     where: { id: requestId },
     data: {
-      status: dto.action === 'APPROVE' ? 'APPROVED' : 'REJECTED' as const,
-      verificationStatus:
-        dto.action === 'APPROVE' ? 'VERIFIED' : 'REJECTED'as const,
+      status: dto.action === RequestStatus.ACCEPTED ? RequestStatus.ACCEPTED :RequestStatus.REJECTED,
       remarks: dto.remarks,
     },
   });

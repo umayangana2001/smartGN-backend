@@ -1,4 +1,6 @@
+import { RequestStatus } from "@prisma/client";
+
 export class GnRequestActionDto {
-  action: 'APPROVE' | 'REJECT';
+  action: RequestStatus;
   remarks?: string;
 }

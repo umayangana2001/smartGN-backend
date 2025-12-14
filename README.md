@@ -41,9 +41,13 @@ Create a `.env` file in the root directory with your database credentials:
 DATABASE_URL="mysql://root:password@localhost:3306/test"
 JWT_SECRET="smartgn-secret-key"
 AUTO_MIGRATE=true  # Set to 'false' to disable automatic migrations on startup
+AUTO_SEED=false    # Set to 'true' to automatically seed admin user on startup
 ```
 
-**Note:** By default, the server automatically runs pending migrations on startup. Set `AUTO_MIGRATE=false` in your `.env` file to disable this behavior.
+**Notes:**
+- By default, the server automatically runs pending migrations on startup. Set `AUTO_MIGRATE=false` to disable.
+- Set `AUTO_SEED=true` to automatically create the admin user on startup (idempotent - won't create duplicates).
+- You can manually run the seed with `npm run prisma:seed` anytime.
 
 ### Running Migrations
 
@@ -89,6 +93,18 @@ $ npx prisma migrate status
 ```bash
 $ npx prisma format
 ```
+
+- **Seed database (create admin user)**:
+```bash
+$ npm run prisma:seed
+```
+
+This creates an admin user with:
+- Email: `admin@hello.com`
+- Password: `admin123`
+- Role: `ADMIN`
+
+The seed script is idempotent - it won't create duplicate admin users if one already exists.
 
 ### Important Notes
 

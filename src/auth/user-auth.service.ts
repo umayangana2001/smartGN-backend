@@ -80,6 +80,7 @@ export class UserAuthService {
     });
 
     if (!user) {
+      // Don't reveal if user exists or not for security
       throw new UnauthorizedException('Invalid credentials');
     }
 
@@ -87,6 +88,7 @@ export class UserAuthService {
     const isPasswordValid = await bcrypt.compare(dto.password, user.password);
 
     if (!isPasswordValid) {
+      // Don't reveal if password is wrong or user doesn't exist
       throw new UnauthorizedException('Invalid credentials');
     }
 

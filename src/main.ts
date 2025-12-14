@@ -24,6 +24,18 @@ async function bootstrap() {
     }
   }
 
+  // Optionally run database seed (creates admin user)
+  // Set AUTO_SEED=true in .env to enable automatic seeding
+  if (process.env.AUTO_SEED === 'true') {
+    try {
+      console.log('Running database seed...');
+      execSync('npm run prisma:seed', { stdio: 'inherit' });
+    } catch (error) {
+      console.error('Seed failed:', error);
+      // Don't exit on seed failure, just log the error
+    }
+  }
+
   const app = await NestFactory.create(AppModule);
   
   // Enable CORS for frontend integration

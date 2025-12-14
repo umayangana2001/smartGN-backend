@@ -302,5 +302,27 @@ export class ServiceRequestService {
 
   return request;
 }
+async gnApproveRejectRequest(
+  requestId: string,
+  dto: { action: 'APPROVE' | 'REJECT'; remarks?: string },
+) {
+  const request = await this.prisma.serviceRequest.findUnique({
+    where: { id: requestId },
+  });
+
+  if (!request) {
+    throw new NotFoundException('Service request not found');
+  }
+
+  return this.prisma.serviceRequest.update({
+    where: { id: requestId },
+    data: {
+      status: dto.action === 'APPROVE' ? 'APPROVED' : 'REJECTED' as const,
+      verificationStatus:
+        dto.action === 'APPROVE' ? 'VERIFIED' : 'REJECTED'as const,
+      remarks: dto.remarks,
+    },
+  });
+}
 }
 

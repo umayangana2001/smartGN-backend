@@ -28,3 +28,11 @@ export class UserProfileService {
     }
   }
 }
+
+async getAllUsersWithProfiles() {
+  return this.prisma.user.findMany({
+    include: {
+      profile: true,
+    },
+  });
+}

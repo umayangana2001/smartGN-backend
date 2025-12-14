@@ -1,3 +1,4 @@
 DATABASE_URL="mysql://root:@localhost:3306/gn_db"
 JWT_SECRET="smartgn-secret-key"
 
+AUTO_MIGRATE=true

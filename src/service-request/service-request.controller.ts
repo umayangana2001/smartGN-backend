@@ -9,6 +9,7 @@ import {
   Query,
   Res,
   NotFoundException,
+  UseGuards,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import {
@@ -18,6 +19,7 @@ import {
   ApiParam,
   ApiBody,
   ApiQuery,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { ServiceRequestService } from './service-request.service';
 import {
@@ -25,17 +27,23 @@ import {
   CreateServiceRequestDto,
   UpdateRequestStatusDto,
 } from './dto';
+import { JwtAuthGuard, RolesGuard } from '../auth/guards';
+import { Roles } from '../auth/decorators';
+import { Role } from '../auth/enums';
 import * as fs from 'fs';
 import * as path from 'path';
 
 @ApiTags('service-request')
 @Controller('service-request')
+@ApiBearerAuth('JWT-auth')
 export class ServiceRequestController {
   constructor(private serviceRequestService: ServiceRequestService) {}
 
   // Service Type Endpoints
 
   @Post('service-type')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Create a new service type (Admin only)' })
   @ApiBody({ type: CreateServiceTypeDto })
   @ApiResponse({
@@ -43,6 +51,7 @@ export class ServiceRequestController {
     description: 'Service type created successfully',
   })
   @ApiResponse({ status: 400, description: 'Service type already exists' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   async createServiceType(@Body() dto: CreateServiceTypeDto) {
     return this.serviceRequestService.createServiceType(dto);
   }
@@ -132,8 +141,10 @@ export class ServiceRequestController {
   }
 
   @Put('request/:id/status')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN, Role.VILLAGE_OFFICER)
   @ApiOperation({
-    summary: 'Update service request status (Admin/Officer only)',
+    summary: 'Update service request status (Admin/GN Officer only)',
   })
   @ApiParam({ name: 'id', description: 'Service request ID' })
   @ApiBody({ type: UpdateRequestStatusDto })
@@ -142,6 +153,7 @@ export class ServiceRequestController {
     description: 'Service request status updated successfully',
   })
   @ApiResponse({ status: 404, description: 'Service request not found' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin or GN Officer access required' })
   async updateRequestStatus(
     @Param('id') id: string,
     @Body() dto: UpdateRequestStatusDto,
@@ -214,8 +226,10 @@ export class ServiceRequestController {
   // Admin/Officer endpoints
 
   @Get('requests')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN, Role.VILLAGE_OFFICER)
   @ApiOperation({
-    summary: 'Get all service requests (Admin/Officer view)',
+    summary: 'Get all service requests (Admin/GN Officer view)',
   })
   @ApiQuery({
     name: 'status',
@@ -236,6 +250,7 @@ export class ServiceRequestController {
     status: 200,
     description: 'All service requests retrieved successfully',
   })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin or GN Officer access required' })
   async getAllServiceRequests(
     @Query('status') status?: string,
     @Query('verificationStatus') verificationStatus?: string,

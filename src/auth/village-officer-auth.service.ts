@@ -9,6 +9,12 @@ import { RegisterVillageOfficerDto, LoginDto } from './dto';
 import * as bcrypt from 'bcrypt';
 import { Role } from './enums';
 
+/**
+ * Village Officer Authentication Service
+ * 
+ * Handles registration and authentication for GN (Gram Niladhari) Officers.
+ * Village Officers have the VILLAGE_OFFICER role by default.
+ */
 @Injectable()
 export class VillageOfficerAuthService {
   constructor(
@@ -16,6 +22,13 @@ export class VillageOfficerAuthService {
     private jwtService: JwtService,
   ) {}
 
+  /**
+   * Register a new village officer
+   * 
+   * @param dto - Registration data (email, password, fullName, district, division)
+   * @returns Officer data without password and success message
+   * @throws ConflictException if email already exists
+   */
   async register(dto: RegisterVillageOfficerDto) {
     // Check if officer already exists
     const existingOfficer = await this.prisma.villageOfficer.findUnique({
@@ -26,7 +39,7 @@ export class VillageOfficerAuthService {
       throw new ConflictException('Email already registered');
     }
 
-    // Hash password
+    // Hash password with bcrypt (10 salt rounds)
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
     // Create village officer
@@ -49,6 +62,13 @@ export class VillageOfficerAuthService {
     };
   }
 
+  /**
+   * Authenticate village officer and generate JWT token
+   * 
+   * @param dto - Login credentials (email, password)
+   * @returns Officer data, access token, and success message
+   * @throws UnauthorizedException if credentials are invalid
+   */
   async login(dto: LoginDto) {
     // Find officer by email
     const officer = await this.prisma.villageOfficer.findUnique({
@@ -66,7 +86,8 @@ export class VillageOfficerAuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Generate JWT token
+    // Generate JWT token with officer information
+    // The role is included in the token for role-based authorization
     const payload = {
       sub: officer.id,
       email: officer.email,

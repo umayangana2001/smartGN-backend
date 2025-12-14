@@ -2,13 +2,15 @@ import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { UserAuthService } from './user-auth.service';
 import { RegisterUserDto, LoginDto } from './dto';
+import { Public } from './decorators';
 
-@ApiTags('auth/user')
+@ApiTags('auth')
 @Controller('auth/user')
 export class UserAuthController {
   constructor(private userAuthService: UserAuthService) {}
 
   @Post('register')
+  @Public()
   @ApiOperation({ summary: 'Register a new user' })
   @ApiBody({ type: RegisterUserDto })
   @ApiResponse({
@@ -21,6 +23,7 @@ export class UserAuthController {
   }
 
   @Post('login')
+  @Public()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'User login' })
   @ApiBody({ type: LoginDto })

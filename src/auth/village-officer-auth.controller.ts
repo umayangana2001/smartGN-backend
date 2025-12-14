@@ -2,13 +2,15 @@ import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { VillageOfficerAuthService } from './village-officer-auth.service';
 import { RegisterVillageOfficerDto, LoginDto } from './dto';
+import { Public } from './decorators';
 
-@ApiTags('auth/village-officer')
+@ApiTags('auth')
 @Controller('auth/village-officer')
 export class VillageOfficerAuthController {
   constructor(private villageOfficerAuthService: VillageOfficerAuthService) {}
 
   @Post('register')
+  @Public()
   @ApiOperation({ summary: 'Register a new village officer' })
   @ApiBody({ type: RegisterVillageOfficerDto })
   @ApiResponse({
@@ -21,6 +23,7 @@ export class VillageOfficerAuthController {
   }
 
   @Post('login')
+  @Public()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Village officer login' })
   @ApiBody({ type: LoginDto })

@@ -1,163 +1,297 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# GN System Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Backend API for Gram Niladhari Service Management System built with NestJS, Prisma, and MySQL.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Prerequisites
 
-## Description
+- Node.js (v18 or higher)
+- MySQL database
+- npm or yarn
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Quick Start
 
-## Project setup
+### 1. Install Dependencies
 
 ```bash
-$ npm install
+npm install
 ```
 
-## Database Setup
+### 2. Setup Environment Variables
 
-### Environment Variables
-
-Create a `.env` file in the root directory with your database credentials:
+Create a `.env` file in the root directory:
 
 ```bash
 DATABASE_URL="mysql://root:password@localhost:3306/test"
 JWT_SECRET="smartgn-secret-key"
+AUTO_MIGRATE=true
+AUTO_SEED=false
 ```
 
-Alternatively, you can use the provided `config/local.env` file as a reference.
+**Environment Variables:**
+- `DATABASE_URL` - MySQL connection string (format: `mysql://user:password@host:port/database`)
+- `JWT_SECRET` - Secret key for JWT token signing
+- `AUTO_MIGRATE` - Set to `false` to disable automatic migrations on startup
+- `AUTO_SEED` - Set to `true` to automatically create admin user on startup
 
-### Running Migrations
+### 3. Generate Prisma Client
 
-After setting up your environment variables, you need to:
-
-1. **Generate Prisma Client** (generates TypeScript types from your schema):
 ```bash
-$ npx prisma generate
+npx prisma generate
 ```
 
-2. **Create and apply migrations** (recommended for production):
+This generates TypeScript types from your Prisma schema.
+
+### 4. Run Database Migrations
+
 ```bash
+# Apply pending migrations
+npx prisma migrate deploy
+```
+
+**Note:** Migrations run automatically on server startup if `AUTO_MIGRATE=true`.
+
+### 5. Seed Admin User (Optional)
+
+```bash
+npm run prisma:seed
+```
+
+This creates an admin user:
+- **Email:** `admin@hello.com`
+- **Password:** `admin123`
+- **Role:** `ADMIN`
+
+The seed script is idempotent - safe to run multiple times.
+
+### 6. Start the Server
+
+```bash
+# Development mode (with hot reload)
+npm run start:dev
+
+# Production mode
+npm run start:prod
+```
+
+Server runs on `http://localhost:3000`  
+Swagger UI: `http://localhost:3000/api`
+
+## Database Commands
+
+### Prisma CLI Commands
+
+```bash
+# Generate Prisma Client (after schema changes)
+npx prisma generate
+
 # Create a new migration
-$ npx prisma migrate dev --name migration_name
+npx prisma migrate dev --name migration_name
 
 # Apply pending migrations
-$ npx prisma migrate deploy
+npx prisma migrate deploy
+
+# Push schema changes (development only - no migration history)
+npx prisma db push
+
+# View database in browser (Prisma Studio)
+npx prisma studio
+
+# Check migration status
+npx prisma migrate status
+
+# Format Prisma schema
+npx prisma format
+
+# Reset database (⚠️ DELETES ALL DATA)
+npx prisma migrate reset
 ```
 
-3. **Push schema to database** (for development only - not recommended for production):
-```bash
-$ npx prisma db push
-```
-
-### Database Management Commands
-
-- **View database in Prisma Studio** (GUI):
-```bash
-$ npx prisma studio
-```
-
-- **Reset database** (drops all data and reapplies migrations):
-```bash
-$ npx prisma migrate reset
-```
-
-- **Check migration status**:
-```bash
-$ npx prisma migrate status
-```
-
-- **Format Prisma schema**:
-```bash
-$ npx prisma format
-```
-
-### Important Notes
-
-- Always run `npx prisma generate` after modifying `prisma/schema.prisma` to update the Prisma Client types
-- Use `prisma migrate dev` for development to create migration files
-- Use `prisma migrate deploy` in production to apply migrations without creating new ones
-- Never use `prisma db push` in production as it doesn't create migration history
-
-## Compile and run the project
+### Seed Commands
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+# Create admin user
+npm run prisma:seed
 ```
 
-## Run tests
+## Development Commands
 
 ```bash
-# unit tests
-$ npm run test
+# Start development server with hot reload
+npm run start:dev
 
-# e2e tests
-$ npm run test:e2e
+# Start production server
+npm run start:prod
 
-# test coverage
-$ npm run test:cov
+# Build for production
+npm run build
+
+# Run tests
+npm run test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run e2e tests
+npm run test:e2e
+
+# Run tests with coverage
+npm run test:cov
+
+# Lint code
+npm run lint
+
+# Format code
+npm run format
 ```
 
-## Deployment
+## API Documentation
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+Once the server is running, access Swagger UI at:
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+**http://localhost:3000/api**
+
+### Features:
+- Interactive API documentation
+- Quick login form (pre-filled with admin credentials)
+- Test endpoints directly from the browser
+- Automatic token management
+
+### Quick Login in Swagger:
+1. Open Swagger UI
+2. Use the "Quick Login" form at the top
+3. Enter credentials (or use pre-filled admin credentials)
+4. Click "Login" - token is automatically set
+5. Test protected endpoints immediately
+
+## Project Structure
+
+```
+src/
+├── auth/              # Authentication module
+│   ├── decorators/    # @Public(), @Roles(), @CurrentUser()
+│   ├── guards/        # JWT and role guards
+│   ├── strategies/    # JWT strategy
+│   └── dto/           # Auth DTOs
+├── user-profile/      # User profile management
+├── service-request/   # Service request management
+└── file-upload/       # File upload handling
+
+prisma/
+├── schema.prisma      # Database schema
+├── seed.ts            # Database seed script
+└── migrations/        # Database migrations
+```
+
+## Authentication & Authorization
+
+### Roles
+- `USER` - Regular users
+- `VILLAGE_OFFICER` - GN Officers
+- `ADMIN` - Administrators
+
+### Authentication Endpoints
+
+#### User Authentication (`auth/user`)
+- `POST /auth/user/register` - Register a new user
+  - **Body:** `{ email, password, role }`
+  - **Response:** User object with id, email, role
+- `POST /auth/user/login` - User login
+  - **Body:** `{ email, password }`
+  - **Response:** `{ access_token }` (JWT token)
+
+#### Village Officer Authentication (`auth/village-officer`)
+- `POST /auth/village-officer/register` - Register a new village officer
+  - **Body:** `{ email, password, role }`
+  - **Response:** Village officer object with id, email, role
+- `POST /auth/village-officer/login` - Village officer login
+  - **Body:** `{ email, password }`
+  - **Response:** `{ access_token }` (JWT token)
+
+**Note:** All authentication endpoints are public (no JWT required). After login, use the returned `access_token` in the `Authorization: Bearer <token>` header for protected endpoints.
+
+### Usage
+
+**Public Endpoint:**
+```typescript
+@Public()
+@Get('public')
+getPublicData() { }
+```
+
+**Protected Endpoint (Any authenticated user):**
+```typescript
+@Get('protected')
+getProtectedData() { }
+```
+
+**Role-Based Access:**
+```typescript
+@UseGuards(RolesGuard)
+@Roles(Role.ADMIN, Role.VILLAGE_OFFICER)
+@Get('admin-only')
+getAdminData() { }
+```
+
+**Get Current User:**
+```typescript
+@Get('profile')
+getProfile(@CurrentUser() user: any) {
+  return { id: user.id, email: user.email, role: user.role };
+}
+```
+
+See `docs/ROLE_BASED_AUTHORIZATION.md` for detailed documentation.
+
+## Common Workflows
+
+### Adding a New Database Model
+
+1. Update `prisma/schema.prisma`
+2. Generate Prisma Client: `npx prisma generate`
+3. Create migration: `npx prisma migrate dev --name add_new_model`
+4. Update your service to use the new model
+
+### Changing Database Schema
+
+1. Modify `prisma/schema.prisma`
+2. Run: `npx prisma migrate dev --name describe_changes`
+3. This creates a migration file and applies it
+
+### Viewing Database Data
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npx prisma studio
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Opens a browser-based database viewer at `http://localhost:5555`
 
-## Resources
+## Troubleshooting
 
-Check out a few resources that may come in handy when working with NestJS:
+### Database Connection Issues
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+- Verify MySQL is running
+- Check `DATABASE_URL` in `.env` file
+- Ensure database exists: `CREATE DATABASE test;`
 
-## Support
+### Migration Issues
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+- Check migration status: `npx prisma migrate status`
+- If migrations are out of sync, reset (⚠️ deletes data): `npx prisma migrate reset`
 
-## Stay in touch
+### Prisma Client Not Found
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+- Run: `npx prisma generate`
+- Restart your development server
 
-## License
+## Default Admin Credentials
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- **Email:** `admin@hello.com`
+- **Password:** `admin123`
+- **Role:** `ADMIN`
+
+**⚠️ Change these credentials in production!**
+
+## Additional Documentation
+
+- [Authentication Guide](docs/AUTHENTICATION.md)
+- [Role-Based Authorization](docs/ROLE_BASED_AUTHORIZATION.md)

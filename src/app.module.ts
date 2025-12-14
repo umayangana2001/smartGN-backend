@@ -9,6 +9,12 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 
+/**
+ * Root application module
+ * 
+ * Configures global JWT authentication guard - all endpoints are protected by default.
+ * Use @Public() decorator on endpoints that should be publicly accessible.
+ */
 @Module({
   imports: [
     PrismaModule,
@@ -20,6 +26,8 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
   controllers: [AppController],
   providers: [
     AppService,
+    // Global JWT authentication guard - protects all endpoints by default
+    // Endpoints can opt-out using @Public() decorator
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,

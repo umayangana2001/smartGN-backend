@@ -10,6 +10,11 @@ import { RegisterUserDto, LoginDto } from './dto';
 import * as bcrypt from 'bcrypt';
 import { Role } from './enums';
 
+/**
+ * User Authentication Service
+ * 
+ * Handles user registration and authentication for regular users and admins.
+ */
 @Injectable()
 export class UserAuthService {
   constructor(
@@ -17,6 +22,14 @@ export class UserAuthService {
     private jwtService: JwtService,
   ) {}
 
+  /**
+   * Register a new user
+   * 
+   * @param dto - Registration data (email, password, optional role)
+   * @returns User data without password and success message
+   * @throws ConflictException if email already exists
+   * @throws BadRequestException if invalid role is provided
+   */
   async register(dto: RegisterUserDto) {
     // Check if user already exists
     const existingUser = await this.prisma.user.findUnique({
@@ -33,7 +46,7 @@ export class UserAuthService {
       throw new BadRequestException('Invalid role for user registration. Only USER or ADMIN allowed.');
     }
 
-    // Hash password
+    // Hash password with bcrypt (10 salt rounds)
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
     // Create user
@@ -53,6 +66,13 @@ export class UserAuthService {
     };
   }
 
+  /**
+   * Authenticate user and generate JWT token
+   * 
+   * @param dto - Login credentials (email, password)
+   * @returns User data, access token, and success message
+   * @throws UnauthorizedException if credentials are invalid
+   */
   async login(dto: LoginDto) {
     // Find user by email
     const user = await this.prisma.user.findUnique({
@@ -70,7 +90,8 @@ export class UserAuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Generate JWT token
+    // Generate JWT token with user information
+    // The role is included in the token for role-based authorization
     const payload = {
       sub: user.id,
       email: user.email,

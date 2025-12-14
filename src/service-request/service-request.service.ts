@@ -10,14 +10,24 @@ import {
   UpdateRequestStatusDto,
 } from './dto';
 
+/**
+ * Service Request Service
+ * 
+ * Manages service requests and service types for the GN system.
+ * Handles creation, retrieval, and status updates for service requests.
+ */
 @Injectable()
 export class ServiceRequestService {
   constructor(private prisma: PrismaService) {}
 
-  // Service Type Methods
+  // ==================== Service Type Methods ====================
 
   /**
    * Create a new service type
+   * 
+   * @param dto - Service type data (name, description, isActive)
+   * @returns Created service type
+   * @throws BadRequestException if service type with same name already exists
    */
   async createServiceType(dto: CreateServiceTypeDto) {
     // Check if service type with same name already exists
@@ -41,7 +51,10 @@ export class ServiceRequestService {
   }
 
   /**
-   * Get all service types (active ones for dropdown)
+   * Get all service types
+   * 
+   * @param includeInactive - Whether to include inactive service types
+   * @returns List of service types
    */
   async getAllServiceTypes(includeInactive = false) {
     const where = includeInactive ? {} : { isActive: true };
@@ -67,10 +80,16 @@ export class ServiceRequestService {
     return serviceType;
   }
 
-  // Service Request Methods
+  // ==================== Service Request Methods ====================
 
   /**
    * Create a new service request for a user
+   * 
+   * @param userId - User ID creating the request
+   * @param dto - Service request data
+   * @returns Created service request with related data
+   * @throws NotFoundException if user or service type not found
+   * @throws BadRequestException if service type is inactive
    */
   async createServiceRequest(userId: string, dto: CreateServiceRequestDto) {
     // Verify user exists

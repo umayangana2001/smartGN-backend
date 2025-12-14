@@ -3,11 +3,20 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AppService } from './app.service';
 import { Public } from './auth/decorators';
 
+/**
+ * Root Application Controller
+ * 
+ * Handles root-level endpoints.
+ */
 @ApiTags('app')
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
+  /**
+   * Health check endpoint
+   * Publicly accessible to verify server is running
+   */
   @Get()
   @Public()
   @ApiOperation({ summary: 'Get hello message' })

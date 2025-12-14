@@ -40,9 +40,10 @@ Create a `.env` file in the root directory with your database credentials:
 ```bash
 DATABASE_URL="mysql://root:password@localhost:3306/test"
 JWT_SECRET="smartgn-secret-key"
+AUTO_MIGRATE=true  # Set to 'false' to disable automatic migrations on startup
 ```
 
-Alternatively, you can use the provided `config/local.env` file as a reference.
+**Note:** By default, the server automatically runs pending migrations on startup. Set `AUTO_MIGRATE=false` in your `.env` file to disable this behavior.
 
 ### Running Migrations
 

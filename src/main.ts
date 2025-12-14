@@ -1,9 +1,29 @@
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
+import { execSync } from 'child_process';
 
 async function bootstrap() {
+  // Run Prisma migrations automatically on startup
+  if (process.env.AUTO_MIGRATE !== 'false') {
+    try {
+      console.log('Running Prisma migrations...');
+      execSync('npx prisma migrate deploy', { stdio: 'inherit' });
+      console.log('Migrations completed successfully');
+    } catch (error) {
+      console.error('Migration failed:', error);
+      // In development, you might want to continue anyway
+      // In production, you might want to exit
+      if (process.env.NODE_ENV === 'production') {
+        process.exit(1);
+      }
+    }
+  }
+
   const app = await NestFactory.create(AppModule);
   app.enableCors();
 

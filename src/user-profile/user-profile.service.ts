@@ -68,12 +68,12 @@ export class UserProfileService {
       });
     }
   }
-}
-
-async getAllUsersWithProfiles() {
+  async getAllUsersWithProfiles() {
   return this.prisma.user.findMany({
     include: {
       profile: true,
     },
   });
 }
+}
+

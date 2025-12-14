@@ -27,6 +27,7 @@ import {
   CreateServiceRequestDto,
   UpdateRequestStatusDto,
 } from './dto';
+import { GnRequestActionDto } from './dto/gn-request-action.dto';
 import { JwtAuthGuard, RolesGuard } from '../auth/guards';
 import { Roles } from '../auth/decorators';
 import { Role } from '../auth/enums';
@@ -277,6 +278,21 @@ async getRequestByDivisionAndId(
   return this.serviceRequestService.getRequestByDivisionAndId(
     division,
     requestId,
+  );
+}
+@Post('gn/request/:id/action')
+@UseGuards(RolesGuard)
+@Roles(Role.VILLAGE_OFFICER)
+@ApiOperation({
+  summary: 'GN approve or reject service request',
+})
+async gnApproveReject(
+  @Param('id') requestId: string,
+  @Body() dto: GnRequestActionDto,
+) {
+  return this.serviceRequestService.gnApproveRejectRequest(
+    requestId,
+    dto,
   );
 }
 }

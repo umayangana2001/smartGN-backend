@@ -8,7 +8,9 @@ import {
   CreateServiceTypeDto,
   CreateServiceRequestDto,
   UpdateRequestStatusDto,
+  GnRequestActionDto,
 } from './dto';
+import { RequestStatus } from '@prisma/client';
 
 /**
  * Service Request Service
@@ -301,6 +303,26 @@ export class ServiceRequestService {
   }
 
   return request;
+}
+async gnApproveRejectRequest(
+  requestId: string,
+  dto: GnRequestActionDto,
+) {
+  const request = await this.prisma.serviceRequest.findUnique({
+    where: { id: requestId },
+  });
+
+  if (!request) {
+    throw new NotFoundException('Service request not found');
+  }
+
+  return this.prisma.serviceRequest.update({
+    where: { id: requestId },
+    data: {
+      status: dto.action === RequestStatus.ACCEPTED ? RequestStatus.ACCEPTED :RequestStatus.REJECTED,
+      remarks: dto.remarks,
+    },
+  });
 }
 }
 

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { MyInfoDto } from './dto/my-info.dto';
 
@@ -16,12 +16,19 @@ export class UserProfileService {
    * 
    * @param userId - User ID
    * @returns User profile with associated documents
+   * @throws NotFoundException if profile does not exist
    */
   async getUserProfile(userId: string) {
-    return this.prisma.userProfile.findUnique({
+    const profile = await this.prisma.userProfile.findUnique({
       where: { userId },
       include: { documents: true },
     });
+
+    if (!profile) {
+      throw new NotFoundException(`User profile not found for user ID: ${userId}`);
+    }
+
+    return profile;
   }
 
   /**

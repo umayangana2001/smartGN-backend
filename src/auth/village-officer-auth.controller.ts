@@ -4,7 +4,7 @@ import { VillageOfficerAuthService } from './village-officer-auth.service';
 import { RegisterVillageOfficerDto, LoginDto } from './dto';
 import { Public } from './decorators';
 
-@ApiTags('auth/village-officer')
+@ApiTags('auth')
 @Controller('auth/village-officer')
 export class VillageOfficerAuthController {
   constructor(private villageOfficerAuthService: VillageOfficerAuthService) {}

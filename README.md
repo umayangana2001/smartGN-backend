@@ -189,6 +189,26 @@ prisma/
 - `VILLAGE_OFFICER` - GN Officers
 - `ADMIN` - Administrators
 
+### Authentication Endpoints
+
+#### User Authentication (`auth/user`)
+- `POST /auth/user/register` - Register a new user
+  - **Body:** `{ email, password, role }`
+  - **Response:** User object with id, email, role
+- `POST /auth/user/login` - User login
+  - **Body:** `{ email, password }`
+  - **Response:** `{ access_token }` (JWT token)
+
+#### Village Officer Authentication (`auth/village-officer`)
+- `POST /auth/village-officer/register` - Register a new village officer
+  - **Body:** `{ email, password, role }`
+  - **Response:** Village officer object with id, email, role
+- `POST /auth/village-officer/login` - Village officer login
+  - **Body:** `{ email, password }`
+  - **Response:** `{ access_token }` (JWT token)
+
+**Note:** All authentication endpoints are public (no JWT required). After login, use the returned `access_token` in the `Authorization: Bearer <token>` header for protected endpoints.
+
 ### Usage
 
 **Public Endpoint:**

@@ -39,3 +39,17 @@ export class UserProfileController {
     return this.userProfileService.createOrUpdateProfile(userId, body);
   }
 }
+
+controller @Get('all')
+@UseGuards(RolesGuard)
+@Roles(Role.ADMIN, Role.VILLAGE_OFFICER)
+@ApiOperation({
+  summary: 'Get all users with profiles (Admin/GN)',
+})
+@ApiResponse({
+  status: 200,
+  description: 'All users retrieved successfully',
+})
+async getAllUsers() {
+  return this.userService.getAllUsersWithProfiles();
+}

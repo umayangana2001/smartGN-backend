@@ -2,6 +2,7 @@ import {
   Injectable,
   UnauthorizedException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -26,6 +27,12 @@ export class UserAuthService {
       throw new ConflictException('Email already registered');
     }
 
+    // Validate role - only USER or ADMIN allowed for user registration
+    const userRole = dto.role || Role.USER;
+    if (userRole !== Role.USER && userRole !== Role.ADMIN) {
+      throw new BadRequestException('Invalid role for user registration. Only USER or ADMIN allowed.');
+    }
+
     // Hash password
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
@@ -34,7 +41,7 @@ export class UserAuthService {
       data: {
         email: dto.email,
         password: hashedPassword,
-        role: Role.USER,
+        role: userRole,
       },
     });
 

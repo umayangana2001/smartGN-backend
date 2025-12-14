@@ -8,7 +8,7 @@ import { Public } from './decorators';
 @Controller('auth/village-officer')
 export class VillageOfficerAuthController {
   constructor(private villageOfficerAuthService: VillageOfficerAuthService) {}
-
+/*
   @Post('register')
   @Public()
   @ApiOperation({ summary: 'Register a new village officer' })
@@ -16,7 +16,7 @@ export class VillageOfficerAuthController {
   @ApiResponse({
     status: 201,
     description: 'Village officer registered successfully',
-  })
+  })*/
   @ApiResponse({ status: 409, description: 'Email already registered' })
   async register(@Body() dto: RegisterVillageOfficerDto) {
     return this.villageOfficerAuthService.register(dto);

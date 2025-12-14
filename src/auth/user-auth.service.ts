@@ -42,7 +42,7 @@ export class UserAuthService {
 
     // Validate role - only USER or ADMIN allowed for user registration
     const userRole = dto.role || Role.USER;
-    if (userRole !== Role.USER && userRole !== Role.ADMIN) {
+    if (userRole !== Role.USER && userRole !== Role.VILLAGE_OFFICER) {
       throw new BadRequestException('Invalid role for user registration. Only USER or ADMIN allowed.');
     }
 

@@ -1,24 +1,16 @@
-// Prisma v7 configuration file.
-// Exports config for the Prisma CLI and a function to get client options.
+// For Prisma v6 configuration
+import { PrismaClient } from '@prisma/client';
 
-const DEFAULT_DB_URL = process.env.DATABASE_URL || 'mysql://root:password@localhost:3306/test';
+// Load environment variables
+import * as dotenv from 'dotenv';
+dotenv.config();
 
-export default {
+const prisma = new PrismaClient({
   datasources: {
     db: {
-      provider: 'mysql',
-      url: DEFAULT_DB_URL,
+      url: process.env.DATABASE_URL,
     },
   },
-};
+});
 
-// Export a function that returns PrismaClient constructor options for runtime use
-export function getPrismaClientOptions() {
-  return {
-    datasources: {
-      db: {
-        url: DEFAULT_DB_URL,
-      },
-    },
-  };
-}
+export default prisma;

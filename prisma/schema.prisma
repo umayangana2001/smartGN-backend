@@ -28,15 +28,20 @@ enum VerificationStatus {
 }
 
 model User {
-  id        String   @id @default(uuid())
+  id        String   @id @default(cuid())
   email     String   @unique
   password  String
   role      Role     @default(USER)
+  firstName String?
+  lastName  String?
+  phone     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  profile        UserProfile?
-  serviceRequests ServiceRequest[]
+  profile             UserProfile?
+  serviceRequests     ServiceRequest[]
+  appointments        Appointment[]    @relation("UserAppointments")
+  officerAppointments Appointment[]    @relation("OfficerAppointments")
 }
 
 model VillageOfficer {
@@ -64,17 +69,17 @@ model UserProfile {
   birthday  DateTime
   updatedAt DateTime @updatedAt
 
-  user      User       @relation(fields: [userId], references: [id])
+  user      User           @relation(fields: [userId], references: [id])
   documents UserDocument[]
 }
 
 model UserDocument {
-  id           String   @id @default(uuid())
+  id           String      @id @default(uuid())
   userId       String
   userProfile  UserProfile @relation(fields: [userId], references: [userId])
   documentName String
   filePath     String
-  createdAt    DateTime @default(now())
+  createdAt    DateTime    @default(now())
 }
 
 model ServiceType {
@@ -85,24 +90,69 @@ model ServiceType {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  requests    ServiceRequest[]
+  requests ServiceRequest[]
 }
 
 model ServiceRequest {
-  id                String            @id @default(uuid())
-  userId            String
-  serviceTypeId     String
-  status            RequestStatus     @default(PENDING)
+  id                 String             @id @default(uuid())
+  userId             String
+  serviceTypeId      String
+  status             RequestStatus      @default(PENDING)
   verificationStatus VerificationStatus @default(PENDING)
-  documentPath      String?           // Path to uploaded document for this request
-  remarks           String?           // Additional notes/comments
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
+  documentPath       String? // Path to uploaded document for this request
+  remarks            String? // Additional notes/comments
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
 
-  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  serviceType       ServiceType       @relation(fields: [serviceTypeId], references: [id])
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serviceType ServiceType  @relation(fields: [serviceTypeId], references: [id])
+  appointment Appointment? // Relation to Appointment
 
   @@index([userId])
   @@index([serviceTypeId])
   @@index([status])
+}
+
+model Appointment {
+  id              String            @id @default(cuid())
+  title           String
+  description     String?
+  date            DateTime
+  startTime       String
+  endTime         String
+  status          AppointmentStatus @default(PENDING)
+  appointmentType AppointmentType
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, name: "UserAppointments")
+
+  officerId String?
+  officer   User?   @relation(fields: [officerId], references: [id], onDelete: SetNull, name: "OfficerAppointments")
+
+  serviceRequestId String?         @unique // ADDED @unique HERE
+  serviceRequest   ServiceRequest? @relation(fields: [serviceRequestId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([officerId])
+  @@index([date])
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  RESCHEDULED
+}
+
+enum AppointmentType {
+  GENERAL_INQUIRY
+  DOCUMENT_REQUEST
+  COMPLAINT
+  CERTIFICATE_ISSUANCE
+  MEETING
+  OTHER
 }

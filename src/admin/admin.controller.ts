@@ -40,6 +40,15 @@ getAllGNs() {
   return this.adminService.getAllGNs();
 }
 
+@Get('dashboard')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(Role.ADMIN)
+@ApiOperation({ summary: 'Admin dashboard statistics' })
+getDashboard() {
+  return this.adminService.getDashboardStats();
+}
+
+
 @Patch('gn/:id/deactivate')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.ADMIN)

@@ -104,4 +104,35 @@ export class UserAuthService {
       access_token: this.jwtService.sign(payload),
     };
   }
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+  // 1️⃣ Find user
+  const user = await this.prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user) {
+    throw new UnauthorizedException('User not found');
+  }
+
+  // 2️⃣ Verify current password
+  const isMatch = await bcrypt.compare(currentPassword, user.password);
+
+  if (!isMatch) {
+    throw new UnauthorizedException('Current password is incorrect');
+  }
+
+  // 3️⃣ Hash new password
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+  // 4️⃣ Update password
+  await this.prisma.user.update({
+    where: { id: userId },
+    data: { password: hashedPassword },
+  });
+
+  return {
+    message: 'Password changed successfully',
+  };
+}
+
 }

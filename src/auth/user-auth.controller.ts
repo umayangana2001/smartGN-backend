@@ -1,8 +1,13 @@
 import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
+
 import { UserAuthService } from './user-auth.service';
 import { RegisterUserDto, LoginDto } from './dto';
 import { Public } from './decorators';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { UseGuards, Patch, Request } from '@nestjs/common';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+
 
 @ApiTags('auth')
 @Controller('auth/user')
@@ -31,8 +36,21 @@ export class UserAuthController {
     status: 200,
     description: 'Login successful, returns JWT token',
   })
+  
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async login(@Body() dto: LoginDto) {
     return this.userAuthService.login(dto);
   }
+  @Patch('change-password')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
+@ApiOperation({ summary: 'Change password (Authenticated users only)' })
+changePassword(@Request() req, @Body() dto: ChangePasswordDto) {
+  return this.userAuthService.changePassword(
+    req.user.sub,
+    dto.currentPassword,
+    dto.newPassword,
+  );
+}
+
 }

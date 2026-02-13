@@ -8,6 +8,8 @@ import { ServiceRequestModule } from './service-request/service-request.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { RolesGuard } from './auth/guards/roles.guard';
+
 
 /**
  * Root application module
@@ -32,6 +34,10 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
     },
+     {
+    provide: APP_GUARD,
+    useClass: RolesGuard,
+  },
   ],
 })
 export class AppModule {}

@@ -9,6 +9,8 @@ import { PrismaModule } from '../../prisma/prisma.module';
 
 import { SuperAdminController } from './super-admin.controller';
 import { SuperAdminService } from './super-admin.service';
+import { RolesGuard } from './guards/roles.guard';
+
 
 @Module({
   imports: [
@@ -20,7 +22,7 @@ import { SuperAdminService } from './super-admin.service';
     }),
   ],
   controllers: [UserAuthController,SuperAdminController,],
-  providers: [UserAuthService, SuperAdminService,JwtStrategy],
+  providers: [UserAuthService, SuperAdminService,JwtStrategy, RolesGuard,],
   exports: [UserAuthService, JwtModule],
 })
 export class AuthModule {}

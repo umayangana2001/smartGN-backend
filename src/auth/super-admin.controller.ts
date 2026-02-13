@@ -10,7 +10,6 @@ import { SuperAdminService } from './super-admin.service';
 @ApiTags('Super Admin')
 @ApiBearerAuth()
 @Controller('super-admin')
-@UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.SUPER_ADMIN)
 export class SuperAdminController {
   constructor(private readonly superAdminService: SuperAdminService) {}

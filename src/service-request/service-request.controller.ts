@@ -8,6 +8,7 @@ import {
   Param,
   Query,
   Res,
+  Req,
   NotFoundException,
   UseGuards,
 } from '@nestjs/common';
@@ -91,22 +92,30 @@ export class ServiceRequestController {
   // Service Request Endpoints
 
   @Post('request/:userId')
-  @ApiOperation({
-    summary: 'Create a new service request (Add Request button)',
-  })
-  @ApiParam({ name: 'userId', description: 'User ID creating the request' })
-  @ApiBody({ type: CreateServiceRequestDto })
-  @ApiResponse({
-    status: 201,
-    description: 'Service request created successfully',
-  })
-  @ApiResponse({ status: 400, description: 'Invalid service type or user' })
-  async createServiceRequest(
-    @Param('userId') userId: string,
-    @Body() dto: CreateServiceRequestDto,
-  ) {
-    return this.serviceRequestService.createServiceRequest(userId, dto);
-  }
+@ApiOperation({
+  summary: 'Create a new service request (Add Request button)',
+})
+@ApiParam({ name: 'userId', description: 'User ID creating the request' })
+@ApiBody({ type: CreateServiceRequestDto })
+@ApiResponse({
+  status: 201,
+  description: 'Service request created successfully',
+})
+@ApiResponse({ status: 400, description: 'Invalid service type or user' })
+async createServiceRequest(
+  @Param('userId') userId: string,
+  @Body() dto: CreateServiceRequestDto,
+  @Req() req: any,
+) {
+  const token = req.headers.authorization?.split(' ')[1];
+
+  return this.serviceRequestService.createServiceRequest(
+    userId,
+    dto,
+    token,
+  );
+}
+
 
   @Get('requests/:userId')
   @ApiOperation({
@@ -289,11 +298,16 @@ async getRequestByDivisionAndId(
 async gnApproveReject(
   @Param('id') requestId: string,
   @Body() dto: GnRequestActionDto,
+  @Req() req: any,
 ) {
+  const token = req.headers.authorization?.split(' ')[1];
+
   return this.serviceRequestService.gnApproveRejectRequest(
     requestId,
     dto,
+    token,
   );
 }
+
 }
 

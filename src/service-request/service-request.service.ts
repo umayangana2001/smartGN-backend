@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 import {
   Injectable,
   NotFoundException,
@@ -93,7 +95,12 @@ export class ServiceRequestService {
    * @throws NotFoundException if user or service type not found
    * @throws BadRequestException if service type is inactive
    */
-  async createServiceRequest(userId: string, dto: CreateServiceRequestDto) {
+  async createServiceRequest(
+  userId: string,
+  dto: CreateServiceRequestDto,
+  token?: string,
+) {
+
     // Verify user exists
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
@@ -117,26 +124,36 @@ export class ServiceRequestService {
       );
     }
 
-    return this.prisma.serviceRequest.create({
-      data: {
-        userId,
-        serviceTypeId: dto.serviceTypeId,
-        documentPath: dto.documentPath,
-        remarks: dto.remarks,
-        status: 'PENDING',
-        verificationStatus: 'PENDING',
+   const request = await this.prisma.serviceRequest.create({
+  data: {
+    userId,
+    serviceTypeId: dto.serviceTypeId,
+    documentPath: dto.documentPath,
+    remarks: dto.remarks,
+    status: 'PENDING',
+    verificationStatus: 'PENDING',
+  },
+  include: {
+    serviceType: true,
+    user: {
+      select: {
+        id: true,
+        email: true,
       },
-      include: {
-        serviceType: true,
-        user: {
-          select: {
-            id: true,
-            email: true,
-          },
-        },
-      },
-    });
-  }
+    },
+  },
+});
+
+// 🔔 NOTIFY CITIZEN
+await this.sendNotification(token, {
+  userId,
+  role: 'CITIZEN',
+  title: 'Request Submitted',
+  message: 'Your request has been submitted successfully',
+});
+
+return request;
+}
 
   /**
    * Get all service requests for a specific user (My Requests page)
@@ -307,6 +324,7 @@ export class ServiceRequestService {
 async gnApproveRejectRequest(
   requestId: string,
   dto: GnRequestActionDto,
+  token: string,
 ) {
   const request = await this.prisma.serviceRequest.findUnique({
     where: { id: requestId },
@@ -324,5 +342,34 @@ async gnApproveRejectRequest(
     },
   });
 }
+private async sendNotification(
+  token: string | undefined,
+  payload: {
+    userId: string;
+    role: 'CITIZEN' | 'GN';
+    title: string;
+    message: string;
+  },
+) {
+  if (!token) return;
+
+  try {
+    await axios.post(
+      'http://localhost:8081/api/notifications',
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+  } catch (error: any) {
+    console.error(
+      '❌ Notification service error:',
+      error?.message || error,
+    );
+  }
+}
+
 }
 

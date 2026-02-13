@@ -1,0 +1,245 @@
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { PrismaService } from '../../prisma/prisma.service';
+import { CreateAppointmentDto } from './dto/create-appointment.dto';
+import { UpdateAppointmentDto } from './dto/update-appointment.dto';
+import { AppointmentStatus, AppointmentType, Role } from '@prisma/client';
+
+@Injectable()
+export class AppointmentService {
+  constructor(private prisma: PrismaService) {}
+
+  async create(userId: string, createAppointmentDto: CreateAppointmentDto) {
+    if (createAppointmentDto.officerId) {
+      const officer = await this.prisma.user.findUnique({
+        where: { 
+          id: createAppointmentDto.officerId,
+          role: { in: [Role.VILLAGE_OFFICER, Role.ADMIN] }
+        }
+      });
+      
+      if (!officer) {
+        throw new NotFoundException('Officer not found');
+      }
+
+      const conflictingAppointment = await this.prisma.appointment.findFirst({
+        where: {
+          officerId: createAppointmentDto.officerId,
+          date: createAppointmentDto.date,
+          status: {
+            in: [AppointmentStatus.CONFIRMED, AppointmentStatus.PENDING]
+          },
+          OR: [
+            {
+              AND: [
+                { startTime: { lte: createAppointmentDto.startTime } },
+                { endTime: { gt: createAppointmentDto.startTime } },
+              ]
+            },
+            {
+              AND: [
+                { startTime: { lt: createAppointmentDto.endTime } },
+                { endTime: { gte: createAppointmentDto.endTime } },
+              ]
+            }
+          ]
+        }
+      });
+
+      if (conflictingAppointment) {
+        throw new BadRequestException('Officer has a conflicting appointment at this time');
+      }
+    }
+
+    return this.prisma.appointment.create({
+      data: {
+        ...createAppointmentDto,
+        userId,
+        status: AppointmentStatus.PENDING,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+          }
+        },
+        officer: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+          }
+        },
+        serviceRequest: {
+          select: {
+            id: true,
+            // Remove 'title: true' or use correct field
+          }
+        }
+      }
+    });
+  }
+
+  async findAll(userId: string, userRole: Role) {
+    let where: any = {};
+
+    if (userRole === Role.USER) {
+      where.userId = userId;
+    } else if (userRole === Role.VILLAGE_OFFICER) {
+      where.officerId = userId;
+    }
+
+    return this.prisma.appointment.findMany({
+      where,
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+          }
+        },
+        officer: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+          }
+        },
+        serviceRequest: {
+          select: {
+            id: true,
+            // Remove 'title: true' or use correct field
+          }
+        }
+      },
+      orderBy: { date: 'asc' },
+    });
+  }
+
+  async findOne(id: string, userId: string, userRole: Role) {
+    const appointment = await this.prisma.appointment.findUnique({
+      where: { id },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+          }
+        },
+        officer: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+          }
+        },
+        serviceRequest: {
+          select: {
+            id: true,
+            // Remove 'title: true' or use correct field
+          }
+        }
+      }
+    });
+
+    if (!appointment) {
+      throw new NotFoundException('Appointment not found');
+    }
+
+    if (userRole === Role.USER && appointment.userId !== userId) {
+      throw new ForbiddenException('You can only view your own appointments');
+    }
+
+    if (userRole === Role.VILLAGE_OFFICER && appointment.officerId !== userId) {
+      throw new ForbiddenException('You can only view appointments assigned to you');
+    }
+
+    return appointment;
+  }
+
+  async update(id: string, userId: string, userRole: Role, updateAppointmentDto: UpdateAppointmentDto) {
+    const appointment = await this.prisma.appointment.findUnique({
+      where: { id }
+    });
+
+    if (!appointment) {
+      throw new NotFoundException('Appointment not found');
+    }
+
+    if (userRole === Role.USER && appointment.userId !== userId) {
+      throw new ForbiddenException('You can only update your own appointments');
+    }
+
+    if (userRole === Role.VILLAGE_OFFICER && appointment.officerId !== userId) {
+      throw new ForbiddenException('You can only update appointments assigned to you');
+    }
+
+    return this.prisma.appointment.update({
+      where: { id },
+      data: updateAppointmentDto,
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+          }
+        },
+        officer: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+          }
+        },
+        serviceRequest: {
+          select: {
+            id: true,
+            // Remove 'title: true' or use correct field
+          }
+        }
+      }
+    });
+  }
+
+  async remove(id: string, userId: string, userRole: Role) {
+    const appointment = await this.prisma.appointment.findUnique({
+      where: { id }
+    });
+
+    if (!appointment) {
+      throw new NotFoundException('Appointment not found');
+    }
+
+    if (userRole === Role.USER && appointment.userId !== userId) {
+      throw new ForbiddenException('You can only delete your own appointments');
+    }
+
+    return this.prisma.appointment.delete({
+      where: { id }
+    });
+  }
+
+  async getOfficerAppointments(officerId: string) {
+    return this.prisma.appointment.findMany({
+      where: {
+        officerId,
+        status: {
+          in: [AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED]
+        }
+      },
+      orderBy: { date: 'asc' },
+    });
+  }
+}

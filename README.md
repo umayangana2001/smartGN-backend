@@ -28,6 +28,7 @@ AUTO_SEED=false
 ```
 
 **Environment Variables:**
+
 - `DATABASE_URL` - MySQL connection string (format: `mysql://user:password@host:port/database`)
 - `JWT_SECRET` - Secret key for JWT token signing
 - `AUTO_MIGRATE` - Set to `false` to disable automatic migrations on startup
@@ -57,6 +58,7 @@ npm run prisma:seed
 ```
 
 This creates an admin user:
+
 - **Email:** `admin@hello.com`
 - **Password:** `admin123`
 - **Role:** `ADMIN`
@@ -151,12 +153,14 @@ Once the server is running, access Swagger UI at:
 **http://localhost:3000/api**
 
 ### Features:
+
 - Interactive API documentation
 - Quick login form (pre-filled with admin credentials)
 - Test endpoints directly from the browser
 - Automatic token management
 
 ### Quick Login in Swagger:
+
 1. Open Swagger UI
 2. Use the "Quick Login" form at the top
 3. Enter credentials (or use pre-filled admin credentials)
@@ -185,6 +189,7 @@ prisma/
 ## Authentication & Authorization
 
 ### Roles
+
 - `USER` - Regular users
 - `VILLAGE_OFFICER` - GN Officers
 - `ADMIN` - Administrators
@@ -192,6 +197,7 @@ prisma/
 ### Authentication Endpoints
 
 #### User Authentication (`auth/user`)
+
 - `POST /auth/user/register` - Register a new user
   - **Body:** `{ email, password, role }`
   - **Response:** User object with id, email, role
@@ -200,6 +206,7 @@ prisma/
   - **Response:** `{ access_token }` (JWT token)
 
 #### Village Officer Authentication (`auth/village-officer`)
+
 - `POST /auth/village-officer/register` - Register a new village officer
   - **Body:** `{ email, password, role }`
   - **Response:** Village officer object with id, email, role
@@ -212,6 +219,7 @@ prisma/
 ### Usage
 
 **Public Endpoint:**
+
 ```typescript
 @Public()
 @Get('public')
@@ -219,12 +227,14 @@ getPublicData() { }
 ```
 
 **Protected Endpoint (Any authenticated user):**
+
 ```typescript
 @Get('protected')
 getProtectedData() { }
 ```
 
 **Role-Based Access:**
+
 ```typescript
 @UseGuards(RolesGuard)
 @Roles(Role.ADMIN, Role.VILLAGE_OFFICER)
@@ -233,6 +243,7 @@ getAdminData() { }
 ```
 
 **Get Current User:**
+
 ```typescript
 @Get('profile')
 getProfile(@CurrentUser() user: any) {
@@ -295,3 +306,18 @@ Opens a browser-based database viewer at `http://localhost:5555`
 
 - [Authentication Guide](docs/AUTHENTICATION.md)
 - [Role-Based Authorization](docs/ROLE_BASED_AUTHORIZATION.md)
+
+## loging super admin
+
+{
+"email": "superadmin@gov.lk",
+"password": "SuperAdmin@123"
+}
+
+## registerd admins
+
+{
+"email": "admin1@gov.lk",
+"password": "Admin@1234",
+"fullName": "Admin One"
+}

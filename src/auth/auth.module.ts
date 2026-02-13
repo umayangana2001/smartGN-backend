@@ -7,6 +7,9 @@ import { UserAuthController } from './user-auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { PrismaModule } from '../../prisma/prisma.module';
 
+import { SuperAdminController } from './super-admin.controller';
+import { SuperAdminService } from './super-admin.service';
+
 @Module({
   imports: [
     PrismaModule,
@@ -16,8 +19,8 @@ import { PrismaModule } from '../../prisma/prisma.module';
       signOptions: { expiresIn: '7d' },
     }),
   ],
-  controllers: [UserAuthController,],
-  providers: [UserAuthService, JwtStrategy],
+  controllers: [UserAuthController,SuperAdminController,],
+  providers: [UserAuthService, SuperAdminService,JwtStrategy],
   exports: [UserAuthService, JwtModule],
 })
 export class AuthModule {}

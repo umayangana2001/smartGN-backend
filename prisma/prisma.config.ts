@@ -2,7 +2,7 @@
 // Exports config for the Prisma CLI and a function to get client options.
 import 'dotenv/config';
 
-const DEFAULT_DB_URL = process.env.DATABASE_URL || 'mysql://root:password@localhost:3306/test';
+const DEFAULT_DB_URL = process.env.DATABASE_URL || 'mysql://root:@localhost:3306/test';
 
 export default {
   datasources: {

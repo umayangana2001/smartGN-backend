@@ -12,6 +12,8 @@ import { Role } from '../auth/enums';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { Get } from '@nestjs/common';
+import { Patch, Param } from '@nestjs/common';
 
 @ApiTags('admin')
 @ApiBearerAuth()
@@ -30,4 +32,21 @@ export class AdminController {
   createGN(@Body() dto: CreateGnDto) {
     return this.adminService.createGN(dto);
   }
+  @Get('gns')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(Role.ADMIN)
+@ApiOperation({ summary: 'Get all GNs (ADMIN only)' })
+getAllGNs() {
+  return this.adminService.getAllGNs();
+}
+
+@Patch('gn/:id/deactivate')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(Role.ADMIN)
+@ApiOperation({ summary: 'Deactivate GN (ADMIN only)' })
+deactivateGN(@Param('id') id: string) {
+  return this.adminService.deactivateGN(id);
+}
+
+
 }

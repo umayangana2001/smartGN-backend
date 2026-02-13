@@ -47,5 +47,49 @@ export class AdminService {
       message: 'GN created successfully',
       gn: result,
     };
+
+    
   }
+  async getAllGNs() {
+  const gns = await this.prisma.user.findMany({
+    where: {
+      role: Role.VILLAGE_OFFICER,
+    },
+    select: {
+      id: true,
+      email: true,
+      fullName: true,
+      district: true,
+      division: true,
+      createdAt: true,
+    },
+  });
+
+  return {
+    count: gns.length,
+    gns,
+  };
+}
+async deactivateGN(id: string) {
+  const user = await this.prisma.user.findUnique({
+    where: { id },
+  });
+
+  if (!user || user.role !== Role.VILLAGE_OFFICER) {
+    throw new ConflictException('GN not found');
+  }
+
+  const updated = await this.prisma.user.update({
+    where: { id },
+    data: { isActive: false },
+  });
+
+  const { password, ...result } = updated;
+
+  return {
+    message: 'GN deactivated successfully',
+    gn: result,
+  };
+}
+
 }

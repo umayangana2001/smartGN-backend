@@ -10,6 +10,7 @@ import { AppService } from './app.service';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
 import { AdminModule } from './admin/admin.module';
+import { ComplaintModule } from './complaint/complaint.module';
 
 
 /**
@@ -26,6 +27,7 @@ import { AdminModule } from './admin/admin.module';
     AuthModule,
     ServiceRequestModule,
     AdminModule,
+    ComplaintModule,
   ],
   controllers: [AppController],
   providers: [

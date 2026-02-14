@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = "mysql://root:@localhost:3306/gn_db"
+  url      = env("DATABASE_URL")
 }
 
 enum Role {
@@ -44,6 +44,8 @@ model User {
 
   profile         UserProfile?
   serviceRequests ServiceRequest[]
+  appointments    Appointment[] @relation("UserAppointments")
+  officerAppointments Appointment[] @relation("OfficerAppointments")
 }
 
 model UserProfile {

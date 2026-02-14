@@ -9,6 +9,7 @@
  * - ADMIN: System administrators
  */
 export enum Role {
+  SUPER_ADMIN = 'SUPER_ADMIN',
   USER = 'USER',
   VILLAGE_OFFICER = 'VILLAGE_OFFICER',
   ADMIN = 'ADMIN',

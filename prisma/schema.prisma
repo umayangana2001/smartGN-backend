@@ -8,6 +8,7 @@ datasource db {
 }
 
 enum Role {
+  SUPER_ADMIN
   USER
   VILLAGE_OFFICER
   ADMIN
@@ -32,28 +33,19 @@ model User {
   email     String   @unique
   password  String
   role      Role     @default(USER)
-  firstName String?
-  lastName  String?
-  phone     String?
+
+  // Optional fields (used mainly for GN / ADMIN)
+  fullName  String?
+  district  String?
+  division  String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  profile             UserProfile?
-  serviceRequests     ServiceRequest[]
-  appointments        Appointment[]    @relation("UserAppointments")
-  officerAppointments Appointment[]    @relation("OfficerAppointments")
-}
-
-model VillageOfficer {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  fullName  String
-  district  String
-  division  String
-  role      Role     @default(VILLAGE_OFFICER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  profile         UserProfile?
+  serviceRequests ServiceRequest[]
+  appointments    Appointment[] @relation("UserAppointments")
+  officerAppointments Appointment[] @relation("OfficerAppointments")
 }
 
 model UserProfile {

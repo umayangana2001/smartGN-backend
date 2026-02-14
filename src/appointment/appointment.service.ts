@@ -2,7 +2,8 @@ import { Injectable, NotFoundException, ForbiddenException, BadRequestException 
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
-import { AppointmentStatus, AppointmentType, Role } from '@prisma/client';
+import { AppointmentStatus, AppointmentType } from '@prisma/client';
+import { Role } from '../auth/enums';
 
 @Injectable()
 export class AppointmentService {
@@ -61,16 +62,14 @@ export class AppointmentService {
           select: {
             id: true,
             email: true,
-            firstName: true,
-            lastName: true,
+            fullName: true,
           }
         },
         officer: {
           select: {
             id: true,
             email: true,
-            firstName: true,
-            lastName: true,
+            fullName: true,
           }
         },
         serviceRequest: {
@@ -99,16 +98,14 @@ export class AppointmentService {
           select: {
             id: true,
             email: true,
-            firstName: true,
-            lastName: true,
+            fullName: true,
           }
         },
         officer: {
           select: {
             id: true,
             email: true,
-            firstName: true,
-            lastName: true,
+            fullName: true,
           }
         },
         serviceRequest: {
@@ -130,16 +127,14 @@ export class AppointmentService {
           select: {
             id: true,
             email: true,
-            firstName: true,
-            lastName: true,
+            fullName: true,
           }
         },
         officer: {
           select: {
             id: true,
             email: true,
-            firstName: true,
-            lastName: true,
+            fullName: true,
           }
         },
         serviceRequest: {
@@ -191,16 +186,14 @@ export class AppointmentService {
           select: {
             id: true,
             email: true,
-            firstName: true,
-            lastName: true,
+            fullName: true,
           }
         },
         officer: {
           select: {
             id: true,
             email: true,
-            firstName: true,
-            lastName: true,
+            fullName: true,
           }
         },
         serviceRequest: {

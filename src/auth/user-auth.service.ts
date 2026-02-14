@@ -2,7 +2,6 @@ import {
   Injectable,
   UnauthorizedException,
   ConflictException,
-  BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -12,26 +11,27 @@ import { Role } from './enums';
 
 /**
  * User Authentication Service
- * 
- * Handles user registration and authentication for regular users and admins.
+ *
+ * Handles public user (citizen) registration and authentication.
+ * Higher privileged roles (ADMIN, GN, SUPER_ADMIN) are created via
+ * controlled internal processes only.
  */
 @Injectable()
 export class UserAuthService {
   constructor(
-    private prisma: PrismaService,
-    private jwtService: JwtService,
+    private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService,
   ) {}
 
   /**
-   * Register a new user
-   * 
-   * @param dto - Registration data (email, password, optional role)
-   * @returns User data without password and success message
-   * @throws ConflictException if email already exists
-   * @throws BadRequestException if invalid role is provided
+   * Register a new USER (Citizen)
+   *
+   * NOTE:
+   * - Public registration allows ONLY USER role
+   * - ADMIN, GN, SUPER_ADMIN are NOT allowed here
    */
   async register(dto: RegisterUserDto) {
-    // Check if user already exists
+    // 1️⃣ Check if email already exists
     const existingUser = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
@@ -40,26 +40,21 @@ export class UserAuthService {
       throw new ConflictException('Email already registered');
     }
 
-    // Validate role - only USER or ADMIN allowed for user registration
-    const userRole = dto.role || Role.USER;
-    if (userRole !== Role.USER && userRole !== Role.VILLAGE_OFFICER) {
-      throw new BadRequestException('Invalid role for user registration. Only USER or ADMIN allowed.');
-    }
-
-    // Hash password with bcrypt (10 salt rounds)
+    // 2️⃣ Hash password
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
-    // Create user
+    // 3️⃣ Create USER (Citizen) only
     const user = await this.prisma.user.create({
       data: {
         email: dto.email,
         password: hashedPassword,
-        role: userRole,
+        role: Role.USER,
       },
     });
 
-    // Return user without password
+    // 4️⃣ Remove password from response
     const { password, ...result } = user;
+
     return {
       message: 'User registered successfully',
       user: result,
@@ -68,32 +63,31 @@ export class UserAuthService {
 
   /**
    * Authenticate user and generate JWT token
-   * 
-   * @param dto - Login credentials (email, password)
-   * @returns User data, access token, and success message
-   * @throws UnauthorizedException if credentials are invalid
+   *
+   * Works for:
+   * USER / GN / ADMIN / SUPER_ADMIN
    */
   async login(dto: LoginDto) {
-    // Find user by email
+    // 1️⃣ Find user by email
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
 
     if (!user) {
-      // Don't reveal if user exists or not for security
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Validate password
-    const isPasswordValid = await bcrypt.compare(dto.password, user.password);
+    // 2️⃣ Validate password
+    const isPasswordValid = await bcrypt.compare(
+      dto.password,
+      user.password,
+    );
 
     if (!isPasswordValid) {
-      // Don't reveal if password is wrong or user doesn't exist
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Generate JWT token with user information
-    // The role is included in the token for role-based authorization
+    // 3️⃣ JWT payload (role-based access)
     const payload = {
       sub: user.id,
       email: user.email,
@@ -101,6 +95,7 @@ export class UserAuthService {
       type: 'user',
     };
 
+    // 4️⃣ Remove password from response
     const { password, ...userWithoutPassword } = user;
 
     return {

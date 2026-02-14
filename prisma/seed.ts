@@ -1,56 +1,50 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Role } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import * as dotenv from 'dotenv';
 
 // Load environment variables
 dotenv.config();
 
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL,
-    },
-  },
-});
+const prisma = new PrismaClient();
 
 async function main() {
-  const adminEmail = 'admin@hello.com';
-  const adminPassword = 'admin123';
+  // 🔐 SUPER ADMIN credentials
+  const superAdminEmail = 'superadmin@gov.lk';
+  const superAdminPassword = 'SuperAdmin@123'; // change later
 
-  // Check if admin user already exists
-  const existingAdmin = await prisma.user.findUnique({
-    where: { email: adminEmail },
+  // 1️⃣ Check if SUPER_ADMIN already exists
+  const existingSuperAdmin = await prisma.user.findFirst({
+    where: { role: Role.SUPER_ADMIN },
   });
 
-  if (existingAdmin) {
-    console.log('Admin user already exists, skipping creation.');
+  if (existingSuperAdmin) {
+    console.log('ℹ️ Super Admin already exists, skipping creation.');
     return;
   }
 
-  // Hash password
-  const hashedPassword = await bcrypt.hash(adminPassword, 10);
+  // 2️⃣ Hash password
+  const hashedPassword = await bcrypt.hash(superAdminPassword, 10);
 
-  // Create admin user
-  const admin = await prisma.user.create({
+  // 3️⃣ Create SUPER_ADMIN
+  const superAdmin = await prisma.user.create({
     data: {
-      email: adminEmail,
+      email: superAdminEmail,
       password: hashedPassword,
-      role: 'ADMIN',
+      role: Role.SUPER_ADMIN,
     },
   });
 
-  console.log('Admin user created successfully:');
-  console.log(`Email: ${admin.email}`);
-  console.log(`Role: ${admin.role}`);
-  console.log(`ID: ${admin.id}`);
+  console.log('✅ Super Admin created successfully');
+  console.log(`Email: ${superAdmin.email}`);
+  console.log(`Role: ${superAdmin.role}`);
+  console.log(`ID: ${superAdmin.id}`);
 }
 
 main()
   .catch((e) => {
-    console.error('Error seeding database:', e);
+    console.error('❌ Error seeding database:', e);
     process.exit(1);
   })
   .finally(async () => {
     await prisma.$disconnect();
   });
-

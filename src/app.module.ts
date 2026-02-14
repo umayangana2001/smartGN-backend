@@ -9,6 +9,9 @@ import { AppointmentModule } from './appointment/appointment.module'; // ← ADD
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { RolesGuard } from './auth/guards/roles.guard';
+import { AdminModule } from './admin/admin.module';
+
 
 /**
  * Root application module
@@ -23,6 +26,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
     FileUploadModule,
     AuthModule,
     ServiceRequestModule,
+    AdminModule,
     AppointmentModule, // ← ADD THIS LINE
   ],
   controllers: [AppController],
@@ -34,6 +38,10 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
     },
+     {
+    provide: APP_GUARD,
+    useClass: RolesGuard,
+  },
   ],
 })
 export class AppModule {}

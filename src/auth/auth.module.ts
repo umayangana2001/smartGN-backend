@@ -3,10 +3,14 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { UserAuthService } from './user-auth.service';
 import { UserAuthController } from './user-auth.controller';
-import { VillageOfficerAuthService } from './village-officer-auth.service';
-import { VillageOfficerAuthController } from './village-officer-auth.controller';
+
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { PrismaModule } from '../../prisma/prisma.module';
+
+import { SuperAdminController } from './super-admin.controller';
+import { SuperAdminService } from './super-admin.service';
+import { RolesGuard } from './guards/roles.guard';
+
 
 @Module({
   imports: [
@@ -17,8 +21,8 @@ import { PrismaModule } from '../../prisma/prisma.module';
       signOptions: { expiresIn: '7d' },
     }),
   ],
-  controllers: [UserAuthController, VillageOfficerAuthController],
-  providers: [UserAuthService, VillageOfficerAuthService, JwtStrategy],
-  exports: [UserAuthService, VillageOfficerAuthService, JwtModule],
+  controllers: [UserAuthController,SuperAdminController,],
+  providers: [UserAuthService, SuperAdminService,JwtStrategy, RolesGuard,],
+  exports: [UserAuthService, JwtModule],
 })
 export class AuthModule {}

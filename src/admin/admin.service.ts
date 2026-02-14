@@ -91,5 +91,84 @@ async deactivateGN(id: string) {
     gn: result,
   };
 }
+async getDashboardStats() {
+  // 👥 User statistics
+  const totalUsers = await this.prisma.user.count({
+    where: { role: 'USER' },
+  });
+
+  const totalGNs = await this.prisma.user.count({
+    where: { role: 'VILLAGE_OFFICER' },
+  });
+
+  const activeGNs = await this.prisma.user.count({
+    where: { role: 'VILLAGE_OFFICER', isActive: true },
+  });
+
+  const inactiveGNs = await this.prisma.user.count({
+    where: { role: 'VILLAGE_OFFICER', isActive: false },
+  });
+
+  // 📢 Complaint statistics
+  const totalComplaints = await this.prisma.complaint.count();
+
+  const pendingComplaints = await this.prisma.complaint.count({
+    where: { status: 'PENDING' },
+  });
+
+  const inReviewComplaints = await this.prisma.complaint.count({
+    where: { status: 'IN_REVIEW' },
+  });
+
+  const resolvedComplaints = await this.prisma.complaint.count({
+    where: { status: 'RESOLVED' },
+  });
+
+  const rejectedComplaints = await this.prisma.complaint.count({
+    where: { status: 'REJECTED' },
+  });
+
+  // 📝 Service Request statistics
+  const totalRequests = await this.prisma.serviceRequest.count();
+
+  const pendingRequests = await this.prisma.serviceRequest.count({
+    where: { status: 'PENDING' },
+  });
+
+  const inProgressRequests = await this.prisma.serviceRequest.count({
+    where: { status: 'IN_PROGRESS' },
+  });
+
+  const completedRequests = await this.prisma.serviceRequest.count({
+    where: { status: 'COMPLETED' },
+  });
+
+  const rejectedRequests = await this.prisma.serviceRequest.count({
+    where: { status: 'REJECTED' },
+  });
+
+  return {
+    users: {
+      totalUsers,
+      totalGNs,
+      activeGNs,
+      inactiveGNs,
+    },
+    complaints: {
+      totalComplaints,
+      pendingComplaints,
+      inReviewComplaints,
+      resolvedComplaints,
+      rejectedComplaints,
+    },
+    serviceRequests: {
+      totalRequests,
+      pendingRequests,
+      inProgressRequests,
+      completedRequests,
+      rejectedRequests,
+    },
+  };
+}
 
 }

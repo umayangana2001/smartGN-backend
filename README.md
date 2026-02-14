@@ -294,7 +294,7 @@ Opens a browser-based database viewer at `http://localhost:5555`
 - Run: `npx prisma generate`
 - Restart your development server
 
-## Default Admin Credentials
+## Admin Credentials (Default)
 
 - **Email:** `admin@hello.com`
 - **Password:** `admin123`

@@ -5,7 +5,7 @@ import {
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateGnDto } from './dto/create-gn.dto';
 import * as bcrypt from 'bcrypt';
-import { Role } from '@prisma/client';
+import { Role } from '../auth/enums';
 
 @Injectable()
 export class AdminService {

@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = "mysql://root:@localhost:3306/gn_db"
+  url      = env("DATABASE_URL")
 }
 
 enum Role {
@@ -29,7 +29,7 @@ enum VerificationStatus {
 }
 
 model User {
-  id        String   @id @default(uuid())
+  id        String   @id @default(cuid())
   email     String   @unique
   password  String
   role      Role     @default(USER)
@@ -63,17 +63,17 @@ model UserProfile {
   birthday  DateTime
   updatedAt DateTime @updatedAt
 
-  user      User       @relation(fields: [userId], references: [id])
+  user      User           @relation(fields: [userId], references: [id])
   documents UserDocument[]
 }
 
 model UserDocument {
-  id           String   @id @default(uuid())
+  id           String      @id @default(uuid())
   userId       String
   userProfile  UserProfile @relation(fields: [userId], references: [userId])
   documentName String
   filePath     String
-  createdAt    DateTime @default(now())
+  createdAt    DateTime    @default(now())
 }
 
 model ServiceType {
@@ -84,22 +84,23 @@ model ServiceType {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  requests    ServiceRequest[]
+  requests ServiceRequest[]
 }
 
 model ServiceRequest {
-  id                String            @id @default(uuid())
-  userId            String
-  serviceTypeId     String
-  status            RequestStatus     @default(PENDING)
+  id                 String             @id @default(uuid())
+  userId             String
+  serviceTypeId      String
+  status             RequestStatus      @default(PENDING)
   verificationStatus VerificationStatus @default(PENDING)
-  documentPath      String?           // Path to uploaded document for this request
-  remarks           String?           // Additional notes/comments
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
+  documentPath       String? // Path to uploaded document for this request
+  remarks            String? // Additional notes/comments
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
 
-  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  serviceType       ServiceType       @relation(fields: [serviceTypeId], references: [id])
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serviceType ServiceType  @relation(fields: [serviceTypeId], references: [id])
+  appointment Appointment? // Relation to Appointment
 
   @@index([userId])
   @@index([serviceTypeId])

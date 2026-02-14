@@ -5,6 +5,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { FileUploadModule } from './file-upload/file-upload.module';
 import { AuthModule } from './auth/auth.module';
 import { ServiceRequestModule } from './service-request/service-request.module';
+import { AppointmentModule } from './appointment/appointment.module'; // ← ADD THIS LINE
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
@@ -28,6 +29,7 @@ import { ComplaintModule } from './complaint/complaint.module';
     ServiceRequestModule,
     AdminModule,
     ComplaintModule,
+    AppointmentModule, // ← ADD THIS LINE
   ],
   controllers: [AppController],
   providers: [
@@ -45,4 +47,3 @@ import { ComplaintModule } from './complaint/complaint.module';
   ],
 })
 export class AppModule {}
-

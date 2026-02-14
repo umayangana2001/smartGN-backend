@@ -28,6 +28,23 @@ enum VerificationStatus {
   REJECTED
 }
 
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  RESCHEDULED
+}
+
+enum AppointmentType {
+  GENERAL_INQUIRY
+  DOCUMENT_REQUEST
+  COMPLAINT
+  CERTIFICATE_ISSUANCE
+  MEETING
+  OTHER
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -47,7 +64,9 @@ model User {
 
   profile         UserProfile?
   serviceRequests ServiceRequest[]
-    complaints      Complaint[]  
+  complaints      Complaint[]
+  appointments    Appointment[]
+  officerAppointments Appointment[] @relation("OfficerAppointments")
 }
 
 model UserProfile {
@@ -100,7 +119,7 @@ model ServiceRequest {
 
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   serviceType ServiceType  @relation(fields: [serviceTypeId], references: [id])
-  appointment Appointment? // Relation to Appointment
+  appointment Appointment?
 
   @@index([userId])
   @@index([serviceTypeId])
@@ -127,4 +146,28 @@ model Complaint {
 
   @@index([userId])
   @@index([status])
+}
+
+model Appointment {
+  id              String           @id @default(uuid())
+  title           String
+  description     String?
+  date            DateTime
+  startTime       String
+  endTime         String
+  status          AppointmentStatus @default(PENDING)
+  appointmentType AppointmentType
+  userId          String
+  officerId       String?
+  serviceRequestId String?          @unique
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  officer         User?            @relation("OfficerAppointments", fields: [officerId], references: [id], onDelete: SetNull)
+  serviceRequest  ServiceRequest?  @relation(fields: [serviceRequestId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([officerId])
+  @@index([date])
 }

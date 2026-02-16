@@ -16,7 +16,7 @@ import { Get } from '@nestjs/common';
 import { Patch, Param } from '@nestjs/common';
 
 @ApiTags('admin')
-@ApiBearerAuth()
+@ApiBearerAuth('JWT-auth')
 @Controller('admin')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}

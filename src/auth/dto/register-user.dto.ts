@@ -1,30 +1,44 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, MinLength, IsEnum, IsOptional } from 'class-validator';
-import { Role } from '../enums';
+import { ApiProperty } from '@nestjs/swagger';
+import {
+  IsEmail,
+  IsNotEmpty,
+  MinLength,
+  IsString,
+} from 'class-validator';
 
 export class RegisterUserDto {
-  @ApiProperty({
-    description: 'User email address',
-    example: 'user@example.com',
-  })
+  @ApiProperty({ example: 'citizen@example.com' })
   @IsEmail()
-  @IsNotEmpty()
   email: string;
 
-  @ApiProperty({
-    description: 'User password (minimum 6 characters)',
-    example: 'password123',
-  })
-  @IsNotEmpty()
+  @ApiProperty({ example: 'StrongPass123' })
   @MinLength(6)
   password: string;
 
-  @ApiPropertyOptional({
-    description: 'User role',
-    enum: Role,
-    enumName: 'Role',   // 👈 important
-  })
-  @IsEnum(Role)
-  @IsOptional()
-  role?: Role;
+  @ApiProperty({ example: 'Nimal Perera' })
+  @IsString()
+  @IsNotEmpty()
+  fullName: string;
+
+  @ApiProperty({ example: '200012345678' })
+  @IsString()
+  @IsNotEmpty()
+  nic: string;
+
+  @ApiProperty({ example: '0771234567' })
+  @IsString()
+  @IsNotEmpty()
+  telephone: string;
+
+  @ApiProperty({ example: 'province-uuid' })
+  @IsString()
+  provinceId: string;
+
+  @ApiProperty({ example: 'district-uuid' })
+  @IsString()
+  districtId: string;
+
+  @ApiProperty({ example: 'division-uuid' })
+  @IsString()
+  divisionId: string;
 }

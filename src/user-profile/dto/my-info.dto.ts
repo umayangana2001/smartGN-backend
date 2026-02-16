@@ -1,44 +1,40 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsEmail, IsDateString } from 'class-validator';
+import { IsString, IsNotEmpty } from 'class-validator';
 
 export class MyInfoDto {
-  @ApiProperty({ description: 'Full name of the user', example: 'John Doe' })
+  @ApiProperty()
   @IsString()
-  @IsNotEmpty()
   fullName: string;
 
-  @ApiProperty({ description: 'Address of the user', example: '123 Main Street' })
+  @ApiProperty()
   @IsString()
-  @IsNotEmpty()
   address: string;
 
-  @ApiProperty({ description: 'National Identity Card number', example: '123456789V' })
+  @ApiProperty()
   @IsString()
-  @IsNotEmpty()
   nic: string;
 
-  @ApiProperty({ description: 'Email address', example: 'john.doe@example.com' })
-  @IsEmail()
-  @IsNotEmpty()
+  @ApiProperty()
+  @IsString()
   email: string;
 
-  @ApiProperty({ description: 'Telephone number', example: '+94771234567' })
+  @ApiProperty()
   @IsString()
-  @IsNotEmpty()
   telephone: string;
 
-  @ApiProperty({ description: 'District', example: 'Colombo' })
+  @ApiProperty()
   @IsString()
-  @IsNotEmpty()
-  district: string;
-
-  @ApiProperty({ description: 'Division', example: 'Colombo North' })
-  @IsString()
-  @IsNotEmpty()
-  division: string;
-
-  @ApiProperty({ description: 'Birthday', example: '1990-01-01T00:00:00.000Z' })
-  @IsDateString()
-  @IsNotEmpty()
   birthday: string;
+
+  @ApiProperty()
+  @IsString()
+  provinceId: string;
+
+  @ApiProperty()
+  @IsString()
+  districtId: string;
+
+  @ApiProperty()
+  @IsString()
+  divisionId: string;
 }

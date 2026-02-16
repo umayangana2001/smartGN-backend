@@ -12,6 +12,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
 import { AdminModule } from './admin/admin.module';
 import { ComplaintModule } from './complaint/complaint.module';
+import { LocationModule } from './location/location.module';
 
 
 /**
@@ -29,7 +30,8 @@ import { ComplaintModule } from './complaint/complaint.module';
     ServiceRequestModule,
     AdminModule,
     ComplaintModule,
-    AppointmentModule, // ← ADD THIS LINE
+    AppointmentModule,
+    LocationModule, // ← ADD THIS LINE
   ],
   controllers: [AppController],
   providers: [

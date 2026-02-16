@@ -18,7 +18,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '../auth/enums';
 
 @ApiTags('complaints')
-@ApiBearerAuth()
+@ApiBearerAuth('JWT-auth')
 @Controller('complaints')
 export class ComplaintController {
   constructor(private readonly complaintService: ComplaintService) {}
@@ -28,8 +28,9 @@ export class ComplaintController {
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Submit complaint (USER only)' })
   createComplaint(@Request() req, @Body() dto: CreateComplaintDto) {
-    return this.complaintService.createComplaint(req.user.sub, dto);
-  }
+  return this.complaintService.createComplaint(req.user.id, dto);
+}
+
 
   // Admin view all complaints
   @Get()

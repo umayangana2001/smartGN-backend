@@ -293,13 +293,16 @@ return request;
       orderBy: { createdAt: 'desc' },
     });
   }
-  async getRequestByDivisionAndId(division: string, requestId: string) {
+async getRequestByDivisionAndId(
+  divisionId: string,
+  requestId: string,
+) {
   const request = await this.prisma.serviceRequest.findFirst({
     where: {
       id: requestId,
       user: {
         profile: {
-          division: division,
+          divisionId: divisionId,
         },
       },
     },
@@ -307,7 +310,13 @@ return request;
       serviceType: true,
       user: {
         include: {
-          profile: true,
+          profile: {
+            include: {
+              province: true,
+              district: true,
+              division: true,
+            },
+          },
         },
       },
     },
@@ -321,6 +330,7 @@ return request;
 
   return request;
 }
+
 async gnApproveRejectRequest(
   requestId: string,
   dto: GnRequestActionDto,

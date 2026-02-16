@@ -8,7 +8,8 @@ import { CreateAdminDto } from './dto';
 import { SuperAdminService } from './super-admin.service';
 
 @ApiTags('Super Admin')
-@ApiBearerAuth()
+@ApiBearerAuth('JWT-auth')   // MUST match main.ts
+@UseGuards(JwtAuthGuard, RolesGuard)   // 🔥 VERY IMPORTANT
 @Controller('super-admin')
 @Roles(Role.SUPER_ADMIN)
 export class SuperAdminController {

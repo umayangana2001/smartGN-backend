@@ -2,6 +2,7 @@ import {
   Injectable,
   UnauthorizedException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -9,13 +10,6 @@ import { RegisterUserDto, LoginDto } from './dto';
 import * as bcrypt from 'bcrypt';
 import { Role } from './enums';
 
-/**
- * User Authentication Service
- *
- * Handles public user (citizen) registration and authentication.
- * Higher privileged roles (ADMIN, GN, SUPER_ADMIN) are created via
- * controlled internal processes only.
- */
 @Injectable()
 export class UserAuthService {
   constructor(
@@ -23,15 +17,9 @@ export class UserAuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  /**
-   * Register a new USER (Citizen)
-   *
-   * NOTE:
-   * - Public registration allows ONLY USER role
-   * - ADMIN, GN, SUPER_ADMIN are NOT allowed here
-   */
+  // ================= REGISTER =================
   async register(dto: RegisterUserDto) {
-    // 1️⃣ Check if email already exists
+    // 🔎 Check existing email
     const existingUser = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
@@ -40,10 +28,35 @@ export class UserAuthService {
       throw new ConflictException('Email already registered');
     }
 
-    // 2️⃣ Hash password
+    // 🔎 Validate province, district, division exist
+    const province = await this.prisma.province.findUnique({
+      where: { id: dto.provinceId },
+    });
+
+    if (!province) {
+      throw new BadRequestException('Invalid province selected');
+    }
+
+    const district = await this.prisma.district.findUnique({
+      where: { id: dto.districtId },
+    });
+
+    if (!district || district.provinceId !== dto.provinceId) {
+      throw new BadRequestException('Invalid district for selected province');
+    }
+
+    const division = await this.prisma.division.findUnique({
+      where: { id: dto.divisionId },
+    });
+
+    if (!division || division.districtId !== dto.districtId) {
+      throw new BadRequestException('Invalid division for selected district');
+    }
+
+    // 🔐 Hash password
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
-    // 3️⃣ Create USER (Citizen) only
+    // 1️⃣ Create User
     const user = await this.prisma.user.create({
       data: {
         email: dto.email,
@@ -52,23 +65,33 @@ export class UserAuthService {
       },
     });
 
-    // 4️⃣ Remove password from response
-    const { password, ...result } = user;
+    // 2️⃣ Create UserProfile
+    await this.prisma.userProfile.create({
+      data: {
+        userId: user.id,
+        fullName: dto.fullName,
+        nic: dto.nic,
+        email: dto.email,
+        telephone: dto.telephone,
+        address: '',
+        birthday: new Date(),
+
+        provinceId: dto.provinceId,
+        districtId: dto.districtId,
+        divisionId: dto.divisionId,
+      },
+    });
+
+    const { password, ...userWithoutPassword } = user;
 
     return {
       message: 'User registered successfully',
-      user: result,
+      user: userWithoutPassword,
     };
   }
 
-  /**
-   * Authenticate user and generate JWT token
-   *
-   * Works for:
-   * USER / GN / ADMIN / SUPER_ADMIN
-   */
+  // ================= LOGIN =================
   async login(dto: LoginDto) {
-    // 1️⃣ Find user by email
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
@@ -77,7 +100,6 @@ export class UserAuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // 2️⃣ Validate password
     const isPasswordValid = await bcrypt.compare(
       dto.password,
       user.password,
@@ -87,7 +109,6 @@ export class UserAuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // 3️⃣ JWT payload (role-based access)
     const payload = {
       sub: user.id,
       email: user.email,
@@ -95,7 +116,6 @@ export class UserAuthService {
       type: 'user',
     };
 
-    // 4️⃣ Remove password from response
     const { password, ...userWithoutPassword } = user;
 
     return {
@@ -104,35 +124,36 @@ export class UserAuthService {
       access_token: this.jwtService.sign(payload),
     };
   }
-  async changePassword(userId: string, currentPassword: string, newPassword: string) {
-  // 1️⃣ Find user
-  const user = await this.prisma.user.findUnique({
-    where: { id: userId },
-  });
 
-  if (!user) {
-    throw new UnauthorizedException('User not found');
+  // ================= CHANGE PASSWORD =================
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+
+    if (!isMatch) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword },
+    });
+
+    return {
+      message: 'Password changed successfully',
+    };
   }
-
-  // 2️⃣ Verify current password
-  const isMatch = await bcrypt.compare(currentPassword, user.password);
-
-  if (!isMatch) {
-    throw new UnauthorizedException('Current password is incorrect');
-  }
-
-  // 3️⃣ Hash new password
-  const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-  // 4️⃣ Update password
-  await this.prisma.user.update({
-    where: { id: userId },
-    data: { password: hashedPassword },
-  });
-
-  return {
-    message: 'Password changed successfully',
-  };
-}
-
 }

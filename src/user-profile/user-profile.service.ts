@@ -1,79 +1,127 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { MyInfoDto } from './dto/my-info.dto';
 
-/**
- * User Profile Service
- * 
- * Manages user profile information including personal details and documents.
- */
 @Injectable()
 export class UserProfileService {
   constructor(private prisma: PrismaService) {}
 
-  /**
-   * Get user profile by user ID
-   * 
-   * @param userId - User ID
-   * @returns User profile with associated documents
-   * @throws NotFoundException if profile does not exist
-   */
+  // ✅ GET USER PROFILE
   async getUserProfile(userId: string) {
     const profile = await this.prisma.userProfile.findUnique({
       where: { userId },
-      include: { documents: true },
+      include: {
+        province: true,
+        district: true,
+        division: true,
+        documents: true,
+      },
     });
 
     if (!profile) {
-      throw new NotFoundException(`User profile not found for user ID: ${userId}`);
+      throw new NotFoundException('User profile not found');
     }
 
     return profile;
   }
 
-  /**
-   * Create or update user profile
-   * 
-   * If profile exists, updates it. Otherwise, creates a new profile.
-   * Validates that the user exists before creating/updating profile.
-   * 
-   * @param userId - User ID
-   * @param data - Profile data
-   * @returns Created or updated profile
-   * @throws BadRequestException if user does not exist
-   */
+  // ✅ CREATE OR UPDATE PROFILE
   async createOrUpdateProfile(userId: string, data: MyInfoDto) {
-    // Validate user exists to prevent foreign key violations
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    // 🔎 Check user exists
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
     if (!user) {
       throw new BadRequestException('User does not exist');
     }
 
-    const existing = await this.prisma.userProfile.findUnique({ where: { userId } });
+    // 🔎 Validate province exists
+    const province = await this.prisma.province.findUnique({
+      where: { id: data.provinceId },
+    });
 
-    // Convert birthday string to Date object for Prisma
+    if (!province) {
+      throw new BadRequestException('Invalid province');
+    }
+
+    // 🔎 Validate district exists
+    const district = await this.prisma.district.findUnique({
+      where: { id: data.districtId },
+    });
+
+    if (!district) {
+      throw new BadRequestException('Invalid district');
+    }
+
+    // 🔎 Validate division exists
+    const division = await this.prisma.division.findUnique({
+      where: { id: data.divisionId },
+    });
+
+    if (!division) {
+      throw new BadRequestException('Invalid division');
+    }
+
+    const existing = await this.prisma.userProfile.findUnique({
+      where: { userId },
+    });
+
     const profileData = {
-      ...data,
+      fullName: data.fullName,
+      address: data.address,
+      nic: data.nic,
+      email: data.email,
+      telephone: data.telephone,
       birthday: new Date(data.birthday),
+
+      provinceId: data.provinceId,
+      districtId: data.districtId,
+      divisionId: data.divisionId,
     };
 
     if (existing) {
       return this.prisma.userProfile.update({
         where: { userId },
         data: profileData,
-      });
-    } else {
-      return this.prisma.userProfile.create({
-        data: { ...profileData, userId },
+        include: {
+          province: true,
+          district: true,
+          division: true,
+        },
       });
     }
+
+    return this.prisma.userProfile.create({
+      data: {
+        userId,
+        ...profileData,
+      },
+      include: {
+        province: true,
+        district: true,
+        division: true,
+      },
+    });
   }
+
+  // ✅ ADMIN: GET ALL USERS WITH PROFILES
   async getAllUsersWithProfiles() {
-  return this.prisma.user.findMany({
-    include: {
-      profile: true,
-    },
-  });
-}
+    return this.prisma.user.findMany({
+      include: {
+        profile: {
+          include: {
+            province: true,
+            district: true,
+            division: true,
+          },
+        },
+      },
+    });
+  }
 }
 

@@ -21,7 +21,7 @@ import { Role } from '../auth/enums/role.enum'; // Add this import
 
 @ApiTags('appointments')
 @Controller('appointments')
-@ApiBearerAuth()
+@ApiBearerAuth('JWT-auth')
 @UseGuards(JwtAuthGuard)
 export class AppointmentController {
   constructor(private readonly appointmentService: AppointmentService) {}

@@ -35,7 +35,7 @@ export class ComplaintController {
   // Admin view all complaints
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+ @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @ApiOperation({ summary: 'Get all complaints (ADMIN only)' })
   getAllComplaints() {
     return this.complaintService.getAllComplaints();
@@ -44,7 +44,7 @@ export class ComplaintController {
   // Admin update complaint status
   @Patch(':id/status')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @ApiOperation({ summary: 'Update complaint status (ADMIN only)' })
   updateStatus(
     @Param('id') id: string,

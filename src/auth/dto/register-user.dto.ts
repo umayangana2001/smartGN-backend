@@ -30,15 +30,5 @@ export class RegisterUserDto {
   @IsNotEmpty()
   telephone: string;
 
-  @ApiProperty({ example: 'province-uuid' })
-  @IsString()
-  provinceId: string;
 
-  @ApiProperty({ example: 'district-uuid' })
-  @IsString()
-  districtId: string;
-
-  @ApiProperty({ example: 'division-uuid' })
-  @IsString()
-  divisionId: string;
 }

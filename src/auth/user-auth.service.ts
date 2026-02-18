@@ -28,30 +28,7 @@ export class UserAuthService {
       throw new ConflictException('Email already registered');
     }
 
-    // 🔎 Validate province, district, division exist
-    const province = await this.prisma.province.findUnique({
-      where: { id: dto.provinceId },
-    });
-
-    if (!province) {
-      throw new BadRequestException('Invalid province selected');
-    }
-
-    const district = await this.prisma.district.findUnique({
-      where: { id: dto.districtId },
-    });
-
-    if (!district || district.provinceId !== dto.provinceId) {
-      throw new BadRequestException('Invalid district for selected province');
-    }
-
-    const division = await this.prisma.division.findUnique({
-      where: { id: dto.divisionId },
-    });
-
-    if (!division || division.districtId !== dto.districtId) {
-      throw new BadRequestException('Invalid division for selected district');
-    }
+  
 
     // 🔐 Hash password
     const hashedPassword = await bcrypt.hash(dto.password, 10);
@@ -66,21 +43,18 @@ export class UserAuthService {
     });
 
     // 2️⃣ Create UserProfile
-    await this.prisma.userProfile.create({
-      data: {
-        userId: user.id,
-        fullName: dto.fullName,
-        nic: dto.nic,
-        email: dto.email,
-        telephone: dto.telephone,
-        address: '',
-        birthday: new Date(),
+   await this.prisma.userProfile.create({
+  data: {
+    userId: user.id,
+    fullName: dto.fullName,
+    nic: dto.nic,
+    email: dto.email,
+    telephone: dto.telephone,
+    address: '',
+    birthday: new Date(),
+  },
+});
 
-        provinceId: dto.provinceId,
-        districtId: dto.districtId,
-        divisionId: dto.divisionId,
-      },
-    });
 
     const { password, ...userWithoutPassword } = user;
 

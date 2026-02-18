@@ -2,26 +2,36 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateComplaintDto } from './dto/create-complaint.dto';
 import { UpdateComplaintStatusDto } from './dto/update-complaint-status.dto';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class ComplaintService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService,private notificationService: NotificationService,) {}
 
   // Citizen creates complaint
-  async createComplaint(userId: string, dto: CreateComplaintDto) {
-    const complaint = await this.prisma.complaint.create({
-      data: {
-        userId,
-        title: dto.title,
-        description: dto.description,
-      },
-    });
+ async createComplaint(userId: string, dto: CreateComplaintDto) {
 
-    return {
-      message: 'Complaint submitted successfully',
-      complaint,
-    };
-  }
+  const complaint = await this.prisma.complaint.create({
+    data: {
+      userId,
+      title: dto.title,
+      description: dto.description,
+    },
+  });
+
+  // 🔔 SEND NOTIFICATION TO ADMIN
+  await this.notificationService.sendNotification({
+    userId: "admin1",   // temporary hardcoded admin id
+    role: "ADMIN",
+    message: "New complaint submitted"
+  });
+
+  return {
+    message: 'Complaint submitted successfully',
+    complaint,
+  };
+}
+
 
   // Admin: View all complaints
   async getAllComplaints() {

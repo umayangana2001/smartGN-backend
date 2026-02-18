@@ -13,6 +13,8 @@ import { RolesGuard } from './auth/guards/roles.guard';
 import { AdminModule } from './admin/admin.module';
 import { ComplaintModule } from './complaint/complaint.module';
 import { LocationModule } from './location/location.module';
+import { NotificationModule } from './notification/notification.module';
+
 
 
 /**
@@ -23,6 +25,7 @@ import { LocationModule } from './location/location.module';
  */
 @Module({
   imports: [
+    NotificationModule,
     PrismaModule,
     UserProfileModule,
     FileUploadModule,

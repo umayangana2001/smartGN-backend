@@ -17,7 +17,7 @@ import { RequestStatus } from '@prisma/client';
 export class ServiceRequestService {
   constructor(private prisma: PrismaService) {}
 
-  // ==================== SERVICE TYPE ====================
+  // ================= SERVICE TYPE =================
 
   async createServiceType(dto: CreateServiceTypeDto) {
     const existing = await this.prisma.serviceType.findUnique({
@@ -25,9 +25,7 @@ export class ServiceRequestService {
     });
 
     if (existing) {
-      throw new BadRequestException(
-        `Service type "${dto.name}" already exists`,
-      );
+      throw new BadRequestException('Service type already exists');
     }
 
     return this.prisma.serviceType.create({
@@ -40,37 +38,47 @@ export class ServiceRequestService {
   }
 
   async getAllServiceTypes(includeInactive = false) {
-    const where = includeInactive ? {} : { isActive: true };
-
     return this.prisma.serviceType.findMany({
-      where,
+      where: includeInactive ? {} : { isActive: true },
       orderBy: { name: 'asc' },
     });
   }
 
   async getServiceTypeById(id: string) {
-    const serviceType = await this.prisma.serviceType.findUnique({
+    const type = await this.prisma.serviceType.findUnique({
       where: { id },
     });
 
-    if (!serviceType) {
-      throw new NotFoundException('Service type not found');
-    }
+    if (!type) throw new NotFoundException('Service type not found');
+    return type;
+  }
 
-    return serviceType;
+  async updateServiceType(id: string, dto: CreateServiceTypeDto) {
+    const existing = await this.prisma.serviceType.findUnique({
+      where: { id },
+    });
+
+    if (!existing) throw new NotFoundException('Service type not found');
+
+    return this.prisma.serviceType.update({
+      where: { id },
+      data: {
+        name: dto.name,
+        description: dto.description,
+        isActive: dto.isActive,
+      },
+    });
   }
 
   async deleteServiceType(id: string) {
-    const serviceType = await this.prisma.serviceType.findUnique({
+    const type = await this.prisma.serviceType.findUnique({
       where: { id },
       include: { requests: true },
     });
 
-    if (!serviceType) {
-      throw new NotFoundException('Service type not found');
-    }
+    if (!type) throw new NotFoundException('Service type not found');
 
-    if (serviceType.requests.length > 0) {
+    if (type.requests.length > 0) {
       throw new BadRequestException(
         'Cannot delete service type with existing requests',
       );
@@ -81,7 +89,7 @@ export class ServiceRequestService {
     });
   }
 
-  // ==================== SERVICE REQUEST ====================
+  // ================= SERVICE REQUEST =================
 
   async createServiceRequest(
     userId: string,
@@ -91,17 +99,13 @@ export class ServiceRequestService {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
-
     if (!user) throw new NotFoundException('User not found');
 
-    const serviceType = await this.prisma.serviceType.findUnique({
+    const type = await this.prisma.serviceType.findUnique({
       where: { id: dto.serviceTypeId },
     });
-
-    if (!serviceType)
-      throw new NotFoundException('Service type not found');
-
-    if (!serviceType.isActive)
+    if (!type) throw new NotFoundException('Service type not found');
+    if (!type.isActive)
       throw new BadRequestException('Service type inactive');
 
     const request = await this.prisma.serviceRequest.create({
@@ -113,12 +117,7 @@ export class ServiceRequestService {
         status: 'PENDING',
         verificationStatus: 'PENDING',
       },
-      include: {
-        serviceType: true,
-        user: {
-          select: { id: true, email: true },
-        },
-      },
+      include: { serviceType: true },
     });
 
     await this.sendNotification(token, {
@@ -139,16 +138,10 @@ export class ServiceRequestService {
     });
   }
 
-  async getServiceRequestById(id: string, userId?: string) {
-    const where: any = { id };
-    if (userId) where.userId = userId;
-
-    const request = await this.prisma.serviceRequest.findFirst({
-      where,
-      include: {
-        serviceType: true,
-        user: { select: { id: true, email: true } },
-      },
+  async getServiceRequestById(id: string) {
+    const request = await this.prisma.serviceRequest.findUnique({
+      where: { id },
+      include: { serviceType: true },
     });
 
     if (!request)
@@ -184,102 +177,11 @@ export class ServiceRequestService {
     });
 
     if (!request)
-      throw new NotFoundException('Request not found or unauthorized');
+      throw new NotFoundException('Request not found');
 
     return this.prisma.serviceRequest.delete({
       where: { id },
     });
-  }
-
-  async getAllServiceRequests(filters?: {
-    status?: string;
-    verificationStatus?: string;
-    serviceTypeId?: string;
-  }) {
-    const where: any = {};
-
-    if (filters?.status) where.status = filters.status;
-    if (filters?.verificationStatus)
-      where.verificationStatus = filters.verificationStatus;
-    if (filters?.serviceTypeId)
-      where.serviceTypeId = filters.serviceTypeId;
-
-    return this.prisma.serviceRequest.findMany({
-      where,
-      include: {
-        serviceType: true,
-        user: { select: { id: true, email: true } },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-  }
-
-  async getRequestByDivisionAndId(
-    divisionId: string,
-    requestId: string,
-  ) {
-    const request = await this.prisma.serviceRequest.findFirst({
-      where: {
-        id: requestId,
-        user: {
-          profile: {
-            divisionId: divisionId,
-          },
-        },
-      },
-      include: {
-        serviceType: true,
-        user: { include: { profile: true } },
-      },
-    });
-
-    if (!request)
-      throw new NotFoundException(
-        'Request not found for this division',
-      );
-
-    return request;
-  }
-
-  async gnApproveRejectRequest(
-    requestId: string,
-    dto: GnRequestActionDto,
-    token: string,
-  ) {
-    const request = await this.prisma.serviceRequest.findUnique({
-      where: { id: requestId },
-    });
-
-    if (!request)
-      throw new NotFoundException('Service request not found');
-
-    const newStatus =
-      dto.action === RequestStatus.ACCEPTED
-        ? RequestStatus.ACCEPTED
-        : RequestStatus.REJECTED;
-
-    const updated = await this.prisma.serviceRequest.update({
-      where: { id: requestId },
-      data: {
-        status: newStatus,
-        remarks: dto.remarks,
-      },
-    });
-
-    await this.sendNotification(token, {
-      userId: request.userId,
-      role: 'CITIZEN',
-      title:
-        newStatus === RequestStatus.ACCEPTED
-          ? 'Request Accepted'
-          : 'Request Rejected',
-      message:
-        newStatus === RequestStatus.ACCEPTED
-          ? 'Your service request has been accepted.'
-          : `Your request was rejected.`,
-    });
-
-    return updated;
   }
 
   private async sendNotification(
@@ -301,8 +203,8 @@ export class ServiceRequestService {
           headers: { Authorization: `Bearer ${token}` },
         },
       );
-    } catch (error: any) {
-      console.error('Notification error:', error?.message);
+    } catch (err) {
+      console.log('Notification failed');
     }
   }
 }

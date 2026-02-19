@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -41,5 +41,29 @@ export class FileUploadService {
       userId,
       createdAt: document.createdAt,
     };
+  }
+
+  async getFilesByUser(userId: string) {
+    return this.prisma.userDocument.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async deleteFile(fileId: string) {
+    const doc = await this.prisma.userDocument.findUnique({
+      where: { id: fileId },
+    });
+
+    if (!doc) {
+      throw new NotFoundException('Document not found');
+    }
+    if (fs.existsSync(doc.filePath)) {
+      fs.unlinkSync(doc.filePath);
+    }
+
+    return this.prisma.userDocument.delete({
+      where: { id: fileId },
+    });
   }
 }

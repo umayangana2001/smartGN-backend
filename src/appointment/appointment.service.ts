@@ -7,17 +7,17 @@ import { Role } from '../auth/enums';
 
 @Injectable()
 export class AppointmentService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(userId: string, createAppointmentDto: CreateAppointmentDto) {
     if (createAppointmentDto.officerId) {
       const officer = await this.prisma.user.findUnique({
-        where: { 
+        where: {
           id: createAppointmentDto.officerId,
           role: { in: [Role.VILLAGE_OFFICER, Role.ADMIN] }
         }
       });
-      
+
       if (!officer) {
         throw new NotFoundException('Officer not found');
       }
@@ -235,4 +235,43 @@ export class AppointmentService {
       orderBy: { date: 'asc' },
     });
   }
+  async getBusySlots(officerId: string, date: string) {
+    const appointments = await this.prisma.appointment.findMany({
+      where: {
+        officerId,
+        date: {
+          gte: new Date(`${date}T00:00:00.000Z`),
+          lte: new Date(`${date}T23:59:59.999Z`),
+        },
+        status: { in: [AppointmentStatus.CONFIRMED, AppointmentStatus.PENDING] },
+      },
+      select: {
+        startTime: true,
+        endTime: true,
+      },
+    });
+
+    return appointments.map(app => ({
+      ...app,
+      startTime: app.startTime.slice(0, 5)
+    }));
+  }
+
+
+  async findOfficersByDivision(divisionId: string) {
+    return this.prisma.user.findMany({
+      where: {
+        role: Role.VILLAGE_OFFICER,
+        division: divisionId,
+        isActive: true,      },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        district: true,
+        division: true,
+      },
+    });
+  }
+
 }

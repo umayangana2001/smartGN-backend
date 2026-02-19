@@ -12,16 +12,7 @@ import {
   NotFoundException,
   UseGuards,
 } from '@nestjs/common';
-import type { Response } from 'express';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiParam,
-  ApiBody,
-  ApiQuery,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ServiceRequestService } from './service-request.service';
 import {
   CreateServiceTypeDto,
@@ -36,278 +27,80 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 @ApiTags('service-request')
-@Controller('service-request')
 @ApiBearerAuth('JWT-auth')
+@Controller('service-request')
 export class ServiceRequestController {
-  constructor(private serviceRequestService: ServiceRequestService) {}
+  constructor(private service: ServiceRequestService) {}
 
-  // Service Type Endpoints
+  // SERVICE TYPE
 
   @Post('service-type')
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
-  @ApiOperation({ summary: 'Create a new service type (Admin only)' })
-  @ApiBody({ type: CreateServiceTypeDto })
-  @ApiResponse({
-    status: 201,
-    description: 'Service type created successfully',
-  })
-  @ApiResponse({ status: 400, description: 'Service type already exists' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
-  async createServiceType(@Body() dto: CreateServiceTypeDto) {
-    return this.serviceRequestService.createServiceType(dto);
+  createServiceType(@Body() dto: CreateServiceTypeDto) {
+    return this.service.createServiceType(dto);
   }
 
   @Get('service-types')
-  @ApiOperation({
-    summary: 'Get all service types (for dropdown in modal)',
-  })
-  @ApiQuery({
-    name: 'includeInactive',
-    required: false,
-    type: Boolean,
-    description: 'Include inactive service types',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'List of service types retrieved successfully',
-  })
-  async getServiceTypes(@Query('includeInactive') includeInactive?: string) {
-    const include = includeInactive === 'true';
-    return this.serviceRequestService.getAllServiceTypes(include);
+  @UseGuards(JwtAuthGuard)
+  getServiceTypes(@Query('includeInactive') includeInactive?: string) {
+    return this.service.getAllServiceTypes(includeInactive === 'true');
   }
 
   @Get('service-type/:id')
-  @ApiOperation({ summary: 'Get a service type by ID' })
-  @ApiParam({ name: 'id', description: 'Service type ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Service type retrieved successfully',
-  })
-  @ApiResponse({ status: 404, description: 'Service type not found' })
-  async getServiceType(@Param('id') id: string) {
-    return this.serviceRequestService.getServiceTypeById(id);
+  @UseGuards(JwtAuthGuard)
+  getServiceType(@Param('id') id: string) {
+    return this.service.getServiceTypeById(id);
   }
 
-  // Service Request Endpoints
+  @Delete('service-type/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  deleteServiceType(@Param('id') id: string) {
+    return this.service.deleteServiceType(id);
+  }
+
+  // SERVICE REQUEST
 
   @Post('request/:userId')
-@ApiOperation({
-  summary: 'Create a new service request (Add Request button)',
-})
-@ApiParam({ name: 'userId', description: 'User ID creating the request' })
-@ApiBody({ type: CreateServiceRequestDto })
-@ApiResponse({
-  status: 201,
-  description: 'Service request created successfully',
-})
-@ApiResponse({ status: 400, description: 'Invalid service type or user' })
-async createServiceRequest(
-  @Param('userId') userId: string,
-  @Body() dto: CreateServiceRequestDto,
-  @Req() req: any,
-) {
-  const token = req.headers.authorization?.split(' ')[1];
-
-  return this.serviceRequestService.createServiceRequest(
-    userId,
-    dto,
-    token,
-  );
-}
-
+  @UseGuards(JwtAuthGuard)
+  createRequest(
+    @Param('userId') userId: string,
+    @Body() dto: CreateServiceRequestDto,
+    @Req() req: any,
+  ) {
+    const token = req.headers.authorization?.split(' ')[1];
+    return this.service.createServiceRequest(userId, dto, token);
+  }
 
   @Get('requests/:userId')
-  @ApiOperation({
-    summary: 'Get all service requests for a user (My Requests page)',
-  })
-  @ApiParam({ name: 'userId', description: 'User ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'User service requests retrieved successfully',
-  })
-  async getUserRequests(@Param('userId') userId: string) {
-    return this.serviceRequestService.getUserServiceRequests(userId);
+  @UseGuards(JwtAuthGuard)
+  getUserRequests(@Param('userId') userId: string) {
+    return this.service.getUserServiceRequests(userId);
   }
 
   @Get('request/:id')
-  @ApiOperation({ summary: 'Get a service request by ID' })
-  @ApiParam({ name: 'id', description: 'Service request ID' })
-  @ApiQuery({
-    name: 'userId',
-    required: false,
-    description: 'User ID (optional, for user-scoped access)',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Service request retrieved successfully',
-  })
-  @ApiResponse({ status: 404, description: 'Service request not found' })
-  async getServiceRequest(
-    @Param('id') id: string,
-    @Query('userId') userId?: string,
-  ) {
-    return this.serviceRequestService.getServiceRequestById(id, userId);
+  @UseGuards(JwtAuthGuard)
+  getRequest(@Param('id') id: string) {
+    return this.service.getServiceRequestById(id);
   }
 
   @Put('request/:id/status')
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.VILLAGE_OFFICER)
-  @ApiOperation({
-    summary: 'Update service request status (Admin/GN Officer only)',
-  })
-  @ApiParam({ name: 'id', description: 'Service request ID' })
-  @ApiBody({ type: UpdateRequestStatusDto })
-  @ApiResponse({
-    status: 200,
-    description: 'Service request status updated successfully',
-  })
-  @ApiResponse({ status: 404, description: 'Service request not found' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Admin or GN Officer access required' })
-  async updateRequestStatus(
+  updateStatus(
     @Param('id') id: string,
     @Body() dto: UpdateRequestStatusDto,
   ) {
-    return this.serviceRequestService.updateServiceRequestStatus(id, dto);
+    return this.service.updateServiceRequestStatus(id, dto);
   }
 
   @Delete('request/:id/:userId')
-  @ApiOperation({
-    summary: 'Delete a service request (Delete Request button)',
-  })
-  @ApiParam({ name: 'id', description: 'Service request ID' })
-  @ApiParam({ name: 'userId', description: 'User ID (for authorization)' })
-  @ApiResponse({
-    status: 200,
-    description: 'Service request deleted successfully',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Service request not found or unauthorized',
-  })
-  async deleteServiceRequest(
+  @UseGuards(JwtAuthGuard)
+  deleteRequest(
     @Param('id') id: string,
     @Param('userId') userId: string,
   ) {
-    return this.serviceRequestService.deleteServiceRequest(id, userId);
+    return this.service.deleteServiceRequest(id, userId);
   }
-
-  @Get('request/:id/download')
-  @ApiOperation({
-    summary: 'Download document associated with service request',
-  })
-  @ApiParam({ name: 'id', description: 'Service request ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Document downloaded successfully',
-  })
-  @ApiResponse({ status: 404, description: 'Request or document not found' })
-  async downloadDocument(@Param('id') id: string, @Res() res: Response) {
-    const request =
-      await this.serviceRequestService.getServiceRequestById(id);
-
-    if (!request.documentPath) {
-      throw new NotFoundException('No document found for this request');
-    }
-
-    // Construct full file path (adjust based on your file storage structure)
-    const filePath = path.resolve(request.documentPath);
-
-    // Check if file exists
-    if (!fs.existsSync(filePath)) {
-      throw new NotFoundException('Document file not found on server');
-    }
-
-    // Get file name from path
-    const fileName = path.basename(filePath);
-
-    // Set headers for file download
-    res.setHeader('Content-Type', 'application/octet-stream');
-    res.setHeader(
-      'Content-Disposition',
-      `attachment; filename="${fileName}"`,
-    );
-
-    // Stream the file
-    const fileStream = fs.createReadStream(filePath);
-    fileStream.pipe(res);
-  }
-
-  // Admin/Officer endpoints
-
-  @Get('requests')
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN, Role.VILLAGE_OFFICER)
-  @ApiOperation({
-    summary: 'Get all service requests (Admin/GN Officer view)',
-  })
-  @ApiQuery({
-    name: 'status',
-    required: false,
-    description: 'Filter by request status',
-  })
-  @ApiQuery({
-    name: 'verificationStatus',
-    required: false,
-    description: 'Filter by verification status',
-  })
-  @ApiQuery({
-    name: 'serviceTypeId',
-    required: false,
-    description: 'Filter by service type ID',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'All service requests retrieved successfully',
-  })
-  @ApiResponse({ status: 403, description: 'Forbidden - Admin or GN Officer access required' })
-  async getAllServiceRequests(
-    @Query('status') status?: string,
-    @Query('verificationStatus') verificationStatus?: string,
-    @Query('serviceTypeId') serviceTypeId?: string,
-  ) {
-    return this.serviceRequestService.getAllServiceRequests({
-      status,
-      verificationStatus,
-      serviceTypeId,
-    });
-  }
-  @Get('gn/division/:division/request/:requestId')
-@UseGuards(RolesGuard)
-@Roles(Role.VILLAGE_OFFICER)
-@ApiOperation({
-  summary: 'GN: Get service request by division and request ID',
-})
-@ApiParam({ name: 'division', description: 'GN division name' })
-@ApiParam({ name: 'requestId', description: 'Service request ID' })
-async getRequestByDivisionAndId(
-  @Param('division') division: string,
-  @Param('requestId') requestId: string,
-) {
-  return this.serviceRequestService.getRequestByDivisionAndId(
-    division,
-    requestId,
-  );
 }
-@Post('gn/request/:id/action')
-@UseGuards(RolesGuard)
-@Roles(Role.VILLAGE_OFFICER)
-@ApiOperation({
-  summary: 'GN approve or reject service request',
-})
-async gnApproveReject(
-  @Param('id') requestId: string,
-  @Body() dto: GnRequestActionDto,
-  @Req() req: any,
-) {
-  const token = req.headers.authorization?.split(' ')[1];
-
-  return this.serviceRequestService.gnApproveRejectRequest(
-    requestId,
-    dto,
-    token,
-  );
-}
-
-}
-

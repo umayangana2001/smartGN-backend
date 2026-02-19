@@ -7,17 +7,17 @@ import { Role } from '../auth/enums';
 
 @Injectable()
 export class AppointmentService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(userId: string, createAppointmentDto: CreateAppointmentDto) {
     if (createAppointmentDto.officerId) {
       const officer = await this.prisma.user.findUnique({
-        where: { 
+        where: {
           id: createAppointmentDto.officerId,
           role: { in: [Role.VILLAGE_OFFICER, Role.ADMIN] }
         }
       });
-      
+
       if (!officer) {
         throw new NotFoundException('Officer not found');
       }
@@ -256,4 +256,22 @@ export class AppointmentService {
       startTime: app.startTime.slice(0, 5)
     }));
   }
+
+
+  async findOfficersByDivision(divisionId: string) {
+    return this.prisma.user.findMany({
+      where: {
+        role: Role.VILLAGE_OFFICER,
+        division: divisionId,
+        isActive: true,      },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        district: true,
+        division: true,
+      },
+    });
+  }
+
 }

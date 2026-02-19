@@ -12,8 +12,10 @@ type UploadedFile = {
 export class FileUploadService {
   constructor(private prisma: PrismaService) {}
 
+  // ================= SAVE FILE =================
   async saveFile(file: UploadedFile, userId: string) {
     const uploadDir = path.join(process.cwd(), 'uploads');
+
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
@@ -22,10 +24,9 @@ export class FileUploadService {
     const sanitizedName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
     const fileName = `${timestamp}_${sanitizedName}`;
     const filePath = path.join(uploadDir, fileName);
-    
+
     fs.writeFileSync(filePath, file.buffer);
 
-    // Save document record to database
     const document = await this.prisma.userDocument.create({
       data: {
         userId,
@@ -36,13 +37,14 @@ export class FileUploadService {
 
     return {
       id: document.id,
-      filePath,
-      documentName: file.originalname,
-      userId,
+      filePath: document.filePath,
+      documentName: document.documentName,
+      userId: document.userId,
       createdAt: document.createdAt,
     };
   }
 
+  // ================= GET FILES =================
   async getFilesByUser(userId: string) {
     return this.prisma.userDocument.findMany({
       where: { userId },
@@ -50,20 +52,26 @@ export class FileUploadService {
     });
   }
 
+  // ================= DELETE FILE =================
   async deleteFile(fileId: string) {
-    const doc = await this.prisma.userDocument.findUnique({
+    const document = await this.prisma.userDocument.findUnique({
       where: { id: fileId },
     });
 
-    if (!doc) {
-      throw new NotFoundException('Document not found');
-    }
-    if (fs.existsSync(doc.filePath)) {
-      fs.unlinkSync(doc.filePath);
+    if (!document) {
+      throw new NotFoundException('File not found');
     }
 
-    return this.prisma.userDocument.delete({
+    // Delete physical file
+    if (fs.existsSync(document.filePath)) {
+      fs.unlinkSync(document.filePath);
+    }
+
+    // Delete DB record
+    await this.prisma.userDocument.delete({
       where: { id: fileId },
     });
+
+    return true;
   }
 }

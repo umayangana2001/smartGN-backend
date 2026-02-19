@@ -1,6 +1,7 @@
 import {
   Controller,
   Post,
+  Get,
   Delete,
   UseInterceptors,
   UploadedFile,
@@ -58,7 +59,16 @@ export class FileUploadController {
     );
   }
 
-  // ================= DELETE =================
+  // ================= GET FILES BY USER =================
+  @Get('user/:userId')
+  @ApiOperation({ summary: 'Get all uploaded files for a user' })
+  @ApiParam({ name: 'userId', description: 'User ID' })
+  @ApiResponse({ status: 200, description: 'Returns list of documents' })
+  async getFiles(@Param('userId') userId: string) {
+    return this.fileUploadService.getFilesByUser(userId);
+  }
+
+  // ================= DELETE FILE =================
   @Delete(':fileId')
   @ApiOperation({ summary: 'Delete a file by ID' })
   @ApiParam({ name: 'fileId', description: 'File ID' })

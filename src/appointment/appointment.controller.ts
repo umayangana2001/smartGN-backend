@@ -1,13 +1,13 @@
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Body, 
-  Patch, 
-  Param, 
-  Delete, 
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
   UseGuards,
-  Query 
+  Query
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { AppointmentService } from './appointment.service';
@@ -24,7 +24,23 @@ import { Role } from '../auth/enums/role.enum'; // Add this import
 @ApiBearerAuth('JWT-auth')
 @UseGuards(JwtAuthGuard)
 export class AppointmentController {
-  constructor(private readonly appointmentService: AppointmentService) {}
+  constructor(private readonly appointmentService: AppointmentService) { }
+
+  @Get('busy-slots')
+  @ApiQuery({ name: 'officerId', required: true })
+  @ApiQuery({ name: 'date', required: true })
+  async getBusySlots(
+    @Query('officerId') officerId: string,
+    @Query('date') date: string,
+  ) {
+    return this.appointmentService.getBusySlots(officerId, date);
+  }
+
+  @Get('available-officers/:divisionId')
+  @ApiOperation({ summary: 'Get officers by division ID' })
+  async getOfficers(@Param('divisionId') divisionId: string) {
+    return this.appointmentService.findOfficersByDivision(divisionId);
+  }
 
   @Post()
   @ApiOperation({ summary: 'Create a new appointment' })
@@ -43,6 +59,14 @@ export class AppointmentController {
     @Query('status') status?: string
   ) {
     return this.appointmentService.findAll(user.id, user.role);
+  }
+
+  @Get('officer/:officerId')
+  @ApiOperation({ summary: 'Get appointments for an officer' })
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN, Role.VILLAGE_OFFICER) // Fixed: Using enum instead of string
+  getOfficerAppointments(@Param('officerId') officerId: string) {
+    return this.appointmentService.getOfficerAppointments(officerId);
   }
 
   @Get(':id')
@@ -71,14 +95,6 @@ export class AppointmentController {
     @CurrentUser() user: any
   ) {
     return this.appointmentService.remove(id, user.id, user.role);
-  }
-
-  @Get('officer/:officerId')
-  @ApiOperation({ summary: 'Get appointments for an officer' })
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN, Role.VILLAGE_OFFICER) // Fixed: Using enum instead of string
-  getOfficerAppointments(@Param('officerId') officerId: string) {
-    return this.appointmentService.getOfficerAppointments(officerId);
   }
 
   @Patch(':id/status')

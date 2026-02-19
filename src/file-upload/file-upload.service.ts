@@ -44,9 +44,16 @@ export class FileUploadService {
     };
   }
 
+  // ================= GET FILES =================
+  async getFilesByUser(userId: string) {
+    return this.prisma.userDocument.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   // ================= DELETE FILE =================
   async deleteFile(fileId: string) {
-    // 1️⃣ Find document
     const document = await this.prisma.userDocument.findUnique({
       where: { id: fileId },
     });
@@ -55,12 +62,12 @@ export class FileUploadService {
       throw new NotFoundException('File not found');
     }
 
-    // 2️⃣ Delete physical file
+    // Delete physical file
     if (fs.existsSync(document.filePath)) {
       fs.unlinkSync(document.filePath);
     }
 
-    // 3️⃣ Delete database record
+    // Delete DB record
     await this.prisma.userDocument.delete({
       where: { id: fileId },
     });

@@ -235,4 +235,25 @@ export class AppointmentService {
       orderBy: { date: 'asc' },
     });
   }
+  async getBusySlots(officerId: string, date: string) {
+    const appointments = await this.prisma.appointment.findMany({
+      where: {
+        officerId,
+        date: {
+          gte: new Date(`${date}T00:00:00.000Z`),
+          lte: new Date(`${date}T23:59:59.999Z`),
+        },
+        status: { in: [AppointmentStatus.CONFIRMED, AppointmentStatus.PENDING] },
+      },
+      select: {
+        startTime: true,
+        endTime: true,
+      },
+    });
+
+    return appointments.map(app => ({
+      ...app,
+      startTime: app.startTime.slice(0, 5)
+    }));
+  }
 }

@@ -344,14 +344,43 @@ async gnApproveRejectRequest(
     throw new NotFoundException('Service request not found');
   }
 
-  return this.prisma.serviceRequest.update({
+  const newStatus =
+    dto.action === RequestStatus.ACCEPTED
+      ? RequestStatus.ACCEPTED
+      : RequestStatus.REJECTED;
+
+  const updated = await this.prisma.serviceRequest.update({
     where: { id: requestId },
     data: {
-      status: dto.action === RequestStatus.ACCEPTED ? RequestStatus.ACCEPTED :RequestStatus.REJECTED,
+      status: newStatus,
       remarks: dto.remarks,
     },
   });
+
+  // 🔔 SEND NOTIFICATION TO CITIZEN
+  if (newStatus === RequestStatus.REJECTED) {
+    await this.sendNotification(token, {
+      userId: request.userId,
+      role: 'CITIZEN',
+      title: 'Request Rejected',
+      message: `Your service request was rejected. Reason: ${
+        dto.remarks || 'No reason provided'
+      }. Please contact GN office.`,
+    });
+  }
+
+  if (newStatus === RequestStatus.ACCEPTED) {
+    await this.sendNotification(token, {
+      userId: request.userId,
+      role: 'CITIZEN',
+      title: 'Request Accepted',
+      message: 'Your service request has been accepted.',
+    });
+  }
+
+  return updated;
 }
+
 private async sendNotification(
   token: string | undefined,
   payload: {

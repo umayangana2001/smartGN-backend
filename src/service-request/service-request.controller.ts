@@ -7,10 +7,8 @@ import {
   Body,
   Param,
   Query,
-  Res,
-  Req,
-  NotFoundException,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ServiceRequestService } from './service-request.service';
@@ -19,12 +17,9 @@ import {
   CreateServiceRequestDto,
   UpdateRequestStatusDto,
 } from './dto';
-import { GnRequestActionDto } from './dto/gn-request-action.dto';
 import { JwtAuthGuard, RolesGuard } from '../auth/guards';
 import { Roles } from '../auth/decorators';
 import { Role } from '../auth/enums';
-import * as fs from 'fs';
-import * as path from 'path';
 
 @ApiTags('service-request')
 @ApiBearerAuth('JWT-auth')
@@ -32,7 +27,7 @@ import * as path from 'path';
 export class ServiceRequestController {
   constructor(private service: ServiceRequestService) {}
 
-  // SERVICE TYPE
+  // ===== SERVICE TYPE =====
 
   @Post('service-type')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -47,10 +42,14 @@ export class ServiceRequestController {
     return this.service.getAllServiceTypes(includeInactive === 'true');
   }
 
-  @Get('service-type/:id')
-  @UseGuards(JwtAuthGuard)
-  getServiceType(@Param('id') id: string) {
-    return this.service.getServiceTypeById(id);
+  @Put('service-type/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  updateServiceType(
+    @Param('id') id: string,
+    @Body() dto: CreateServiceTypeDto,
+  ) {
+    return this.service.updateServiceType(id, dto);
   }
 
   @Delete('service-type/:id')
@@ -60,7 +59,7 @@ export class ServiceRequestController {
     return this.service.deleteServiceType(id);
   }
 
-  // SERVICE REQUEST
+  // ===== SERVICE REQUEST =====
 
   @Post('request/:userId')
   @UseGuards(JwtAuthGuard)
@@ -77,12 +76,6 @@ export class ServiceRequestController {
   @UseGuards(JwtAuthGuard)
   getUserRequests(@Param('userId') userId: string) {
     return this.service.getUserServiceRequests(userId);
-  }
-
-  @Get('request/:id')
-  @UseGuards(JwtAuthGuard)
-  getRequest(@Param('id') id: string) {
-    return this.service.getServiceRequestById(id);
   }
 
   @Put('request/:id/status')
